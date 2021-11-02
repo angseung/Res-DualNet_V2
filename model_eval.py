@@ -24,7 +24,6 @@ def train(ep):
 
     for batch_idx, (inputs, targets) in enumerate(dataloader):
         inputs, targets = inputs.to(device), targets.to(device)
-        # bimage.plot('input_batch', 't0', inputs)
 
         optimizer.zero_grad()
         outputs = net(inputs)
@@ -107,7 +106,7 @@ pth_path = config['pth_path']
 SAVEDAT = torch.load(pth_path)
 
 net.load_state_dict(SAVEDAT['net'])
-# optimizer.load_state_dict(SAVEDAT['optimizer'])
+optimizer.load_state_dict(SAVEDAT['optimizer'])
 acc = SAVEDAT['acc']
 epoch = SAVEDAT['epoch']
 
