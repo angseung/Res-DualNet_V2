@@ -94,7 +94,7 @@ optimizer = optim.Adam(net.parameters(), lr=0.0025)
 net.to(device)
 net = torch.nn.DataParallel(net)
 cudnn.benchmark = True
-optimizer = optim.Adam(net.parameters(), lr=0.0025)
+optimizer = optim.Adam(net.parameters(), lr=0.001)
 
 # Load checkpoint data
 # {net : net.state_dict,
