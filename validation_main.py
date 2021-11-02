@@ -1,20 +1,18 @@
 import torch
-import torchinfo
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.nn as nn
 from torchinfo import summary
-from models.resnetCA_ori import ResDaulNet18_TPI5
-from models.resnetCA import ResDaulNet18_TP5
+from models.resnetCA import ResDaulNet18_TPI5, ResDaulNet18_TP5
 from utils import data_loader, progress_bar
 import math
 
 config ={
-    mode : 'test',
-    dataset : 'ImageNet',
-    pth_path : "./outputs/resdual5_imagenet/ckpt.pth",
-    input_size : 224,
-    batch_size : 100
+    'mode' : 'test',
+    'dataset' : 'ImageNet',
+    'pth_path' : "./outputs/resdual5_imagenet/ckpt.pth",
+    'input_size' : 224,
+    'batch_size' : 100
 }
 
 def train(ep):
@@ -105,17 +103,20 @@ optimizer = optim.Adam(net.parameters(), lr=0.0025)
 #  optimizer : optimizer.state_dict(),
 #  epoch : best performed epoch}
 
-pth_path = config['path']
+pth_path = config['pth_path']
 SAVEDAT = torch.load(pth_path)
 
 net.load_state_dict(SAVEDAT['net'])
-optimizer.load_state_dict(SAVEDAT['optimizer'])
+# optimizer.load_state_dict(SAVEDAT['optimizer'])
 acc = SAVEDAT['acc']
 epoch = SAVEDAT['epoch']
 
 model_name = net.module.__class__.__name__
 print("%s model was loaded successfully... [best validation acc : %.3f at %03d epoch]"
       %(model_name, acc, epoch))
+
+# input_size = 32
+# dataset = "CIFAR-10"
 
 dataloader = data_loader(
     mode=config['mode'],
@@ -125,10 +126,10 @@ dataloader = data_loader(
     shuffle_opt=True
 )
 
-print("Loading %s dataset completed..." % mode)
+print("Loading %s dataset completed..." % config['mode'])
 
 # Get model params and macs...
-modelinfo = summary(net, (1, 3, input_size, input_size), verbose=0)
+modelinfo = summary(net, (1, 3, config['input_size'], config['input_size']), verbose=0)
 total_params = modelinfo.total_params
 total_macs = modelinfo.total_mult_adds
 
@@ -137,7 +138,7 @@ macs_bil = total_macs / (10 ** 9)
 
 criterion = nn.CrossEntropyLoss()
 
-if mode == 'train':
+if config['mode'] == 'train':
     max_epoch = 100
     print("Resume training from %03d epoch..." % (epoch + 1))
     for ep in range(epoch + 1, max_epoch):
@@ -146,7 +147,7 @@ if mode == 'train':
     print("Training completed...\n\t[Training accuracy : %.3f at %03d epoch]"
           % (train_acc, ep))
 
-elif mode == 'test':
+elif config['mode'] == 'test':
     test_acc = test()
 
     netscore = 20 * math.log10((test_acc ** 2) / (math.sqrt(param_mil) * math.sqrt(macs_bil)))

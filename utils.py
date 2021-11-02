@@ -36,6 +36,7 @@ class VisdomLinePlotter(object):
         else:
             self.viz.line(X=np.array([x]), Y=np.array([y]), env=self.env, win=self.plots[var_name], name=split_name, update = 'append')
 
+
 class VisdomImagePlotter(object):
     """Plots to Visdom"""
     def __init__(self, env_name='main'):
@@ -51,6 +52,7 @@ class VisdomImagePlotter(object):
         else:
             self.viz.images(img, env=self.env, win=self.plots[var_name])
 
+
 def get_mean_and_std(dataset):
     '''Compute the mean and std value of dataset.'''
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
@@ -64,6 +66,7 @@ def get_mean_and_std(dataset):
     mean.div_(len(dataset))
     std.div_(len(dataset))
     return mean, std
+
 
 def init_params(net):
     '''Init layer parameters.'''
@@ -88,6 +91,8 @@ term_width = int(term_width)
 TOTAL_BAR_LENGTH = 65.
 last_time = time.time()
 begin_time = last_time
+
+
 def progress_bar(current, total, msg=None):
     global last_time, begin_time
     if current == 0:
@@ -131,6 +136,7 @@ def progress_bar(current, total, msg=None):
         sys.stdout.write('\n')
     sys.stdout.flush()
 
+
 def format_time(seconds):
     days = int(seconds / 3600/24)
     seconds = seconds - days*3600*24
@@ -164,32 +170,224 @@ def format_time(seconds):
     return f
 
 
-def train_loader(dataset='CIFAR-10', input_size=32, batch_size=64, shuffle_opt=True):
-    if dataset == 'CIFAR-10':
-        raise NotImplementedError
-    elif dataset == 'ImageNet':
+def save_checkpoint(epoch, acc, loss, model, optimizer, filename):
+    if type(epoch) is not int:
+        raise TypeError("Epoch must be int type")
+    if type(acc) is not list:
+        raise TypeError()
+    if type(loss) is not list:
+        raise TypeError()
+
+    state = {
+        'epoch' : epoch,
+        'acc' : acc, # [train_acc, test_acc]
+        'loss' : loss, # [train_loss, test_loss]
+        'state_dict' : model.state_dict(),
+        'optimizer' : optimizer.state_dict()
+    }
+
+    torch.save(state, filename)
+
+
+def plot_weights(model, layer_num, single_channel=True, collated=False):
+    # extracting the model features at the particular layer number
+    layer = model.features[layer_num]
+
+    # checking whether the layer is convolution layer or not
+    if isinstance(layer, nn.Conv2d):
+        # getting the weight tensor data
+        weight_tensor = model.features[layer_num].weight.data
+
+        if single_channel:
+            if collated:
+                plot_filters_single_channel_big(weight_tensor)
+            else:
+                plot_filters_single_channel(weight_tensor)
+
+        else:
+            if weight_tensor.shape[1] == 3:
+                plot_filters_multi_channel(weight_tensor)
+            else:
+                print("Can only plot weights with three channels with single channel = False")
+
+    else:
+        print("Can only visualize layers which are convolutional")
+
+
+def plot_filters_single_channel_big(t):
+    # setting the rows and columns
+    nrows = t.shape[0] * t.shape[2]
+    ncols = t.shape[1] * t.shape[3]
+
+    npimg = np.array(t.numpy(), np.float32)
+    npimg = npimg.transpose((0, 2, 1, 3))
+    npimg = npimg.ravel().reshape(nrows, ncols)
+
+    npimg = npimg.T
+
+    fig, ax = plt.subplots(figsize=(ncols / 10, nrows / 200))
+    imgplot = sns.heatmap(npimg, xticklabels=False, yticklabels=False, cmap='gray', ax=ax, cbar=False)
+
+
+def plot_filters_single_channel(t):
+    # kernels depth * number of kernels
+    nplots = t.shape[0] * t.shape[1]
+    ncols = 12
+
+    nrows = 1 + nplots // ncols
+    # convert tensor to numpy image
+    npimg = np.array(t.numpy(), np.float32)
+
+    count = 0
+    fig = plt.figure(figsize=(ncols, nrows))
+
+    # looping through all the kernels in each channel
+    for i in range(t.shape[0]):
+        for j in range(t.shape[1]):
+            count += 1
+            ax1 = fig.add_subplot(nrows, ncols, count)
+            npimg = np.array(t[i, j].numpy(), np.float32)
+            npimg = (npimg - np.mean(npimg)) / np.std(npimg)
+            npimg = np.minimum(1, np.maximum(0, (npimg + 0.5)))
+            ax1.imshow(npimg)
+            ax1.set_title(str(i) + ',' + str(j))
+            ax1.axis('off')
+            ax1.set_xticklabels([])
+            ax1.set_yticklabels([])
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_filters_multi_channel(t):
+    # get the number of kernals
+    num_kernels = t.shape[0]
+
+    # define number of columns for subplots
+    num_cols = 12
+    # rows = num of kernels
+    num_rows = num_kernels
+
+    # set the figure size
+    fig = plt.figure(figsize=(num_cols, num_rows))
+
+    # looping through all the kernels
+    for i in range(t.shape[0]):
+        ax1 = fig.add_subplot(num_rows, num_cols, i + 1)
+
+        # for each kernel, we convert the tensor to numpy
+        npimg = np.array(t[i].numpy(), np.float32)
+        # standardize the numpy image
+        npimg = (npimg - np.mean(npimg)) / np.std(npimg)
+        npimg = np.minimum(1, np.maximum(0, (npimg + 0.5)))
+        npimg = npimg.transpose((1, 2, 0))
+        ax1.imshow(npimg)
+        ax1.axis('off')
+        ax1.set_title(str(i))
+        ax1.set_xticklabels([])
+        ax1.set_yticklabels([])
+
+    plt.savefig('myimage.png', dpi=100)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_filter_ch(img, title='', width=8):
+    (b, c, h, w) = img.shape
+    if c <= 64:
+        width = 8
+    elif c >= 256:
+        width = 16
+
+    hor = c // width
+
+    fig = plt.figure(figsize=(8, 8))
+
+    for i in range(c):
+        plt.subplot(hor, width, i + 1)
+        plt.imshow(img[0, i, :, :])
+        plt.axis('off')
+
+    plt.suptitle(title)
+    plt.show()
+
+
+def plot_hist(img, title):
+    img = img.flatten()
+    std, mean = np.std(img), np.mean(img)
+
+    fig = plt.figure()
+    plt.hist(img, bins=10000)
+    plt.title("mean : %.4f std : %.4f, layer = %s" % (mean, std, title))
+    plt.tight_layout()
+    plt.show()
+
+
+def data_loader(
+        mode='test',
+        dataset='ImageNet',
+        input_size=224,
+        batch_size=256,
+        shuffle_opt=True):
+    if dataset == 'CIFAR-10' and input_size == 32:
         normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                          std=[0.2023, 0.1994, 0.2010])
+        if mode == 'train':
+            transform_train = transforms.Compose([
+                transforms.ToTensor(),
+                normalize])
 
-    if input_size == 32:
-        raise NotImplementedError
-    elif input_size == 224:
-        transform_train = transforms.Compose([
-                    transforms.RandomResizedCrop(112),
-                    transforms.RandomHorizontalFlip(),
-                    transforms.ToTensor(),
-                    normalize])
+            data = torchvision.datasets.CIFAR10(
+                root='C:/cifar-10/',
+                train=True,
+                download=True,
+                transform=transform_train)
 
-        trainset = torchvision.datasets.ImageNet(
-            root='C:/imagenet/',
-            split='train',
-            transform=transform_train)
+        elif mode == 'test':
+            transform_test = transforms.Compose([
+                transforms.ToTensor(),
+                normalize
+            ])
 
-    trainloader = torch.utils.data.DataLoader(
-        trainset,
+            data = torchvision.datasets.CIFAR10(
+                root='C:/cifar-10/',
+                train=False,
+                download=True,
+                transform=transform_test)
+
+    elif dataset == 'ImageNet' and input_size == 224:
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+        if mode == 'train':
+            transform_train = transforms.Compose([
+                transforms.RandomResizedCrop(224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize])
+
+            data = torchvision.datasets.ImageNet(
+                root='C:/imagenet/',
+                split='train',
+                transform=transform_train)
+
+        elif mode == 'test':
+            transform_test = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                normalize
+            ])
+
+            data = torchvision.datasets.ImageNet(
+                root='C:/imagenet/',
+                split = 'val',
+                transform=transform_test)
+
+    dataloader = torch.utils.data.DataLoader(
+        data,
         batch_size=batch_size,
         shuffle=shuffle_opt,
         num_workers=0)
 
-    # (inputs, target) in enumerate(trainloader)
-    return trainloader
+    # (inputs, target) in enumerate(dataloader)
+    return dataloader
