@@ -8,11 +8,12 @@ from utils import data_loader, progress_bar
 import math
 
 config ={
-    'mode' : 'test',
+    'mode' : 'train',
     'dataset' : 'ImageNet',
     'pth_path' : "./outputs/resdual5_imagenet/ckpt.pth",
     'input_size' : 224,
-    'batch_size' : 100
+    'batch_size' : 256,
+    'max_epoch' : 200
 }
 
 def train(ep):
@@ -138,7 +139,7 @@ macs_bil = total_macs / (10 ** 9)
 criterion = nn.CrossEntropyLoss()
 
 if config['mode'] == 'train':
-    max_epoch = 100
+    max_epoch = config['max_epoch']
     print("Resume training from %03d epoch..." % (epoch + 1))
     for ep in range(epoch + 1, max_epoch):
         train_acc = train(ep)
