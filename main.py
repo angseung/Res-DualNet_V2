@@ -5,6 +5,8 @@ import torchvision
 import torchvision.transforms as transforms
 import torch.onnx
 
+from torchinfo import summary
+
 from tqdm import tqdm
 
 import os
@@ -35,13 +37,23 @@ np.random.seed(random_seed)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-max_epoch = 100
+
+config = {
+    'max_epoch' : 100,
+    'initial_lr' : 0.0025,
+    'train_batch_size' : 256,
+    'dataset' : 'CIFAR-10' # [ImageNet, CIFAR-10]
+}
+
+Dataset = config['dataset']
+max_epoch = config['max_epoch']
+batch_size = config['train_batch_size']
 
 # Data Preparing  !!!
 print('==> Preparing data..')
-Dataset = 'ImageNet' # [ImageNet, CIFAR-10]
 
 if Dataset == 'ImageNet':
+    input_size = 224
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     transform_train = transforms.Compose([
@@ -61,6 +73,7 @@ if Dataset == 'ImageNet':
     testset = torchvision.datasets.ImageNet(root='C:/imagenet/', split='val', transform=transform_test)
 
 elif Dataset == 'CIFAR-10':
+    input_size = 32
     normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                      std=[0.2023, 0.1994, 0.2010])
     transform_train = transforms.Compose([
@@ -71,10 +84,11 @@ elif Dataset == 'CIFAR-10':
         transforms.ToTensor(),
         normalize
     ])
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-    testset = torchvision.datasets.ImageNet(root='C:/imagenet/', split='val', transform=transform_test)
+    trainset = torchvision.datasets.CIFAR10(root='C:/cifar-10/', train=True, download=True, transform=transform_train)
+    testset = torchvision.datasets.CIFAR10(root='C:/cifar-10/', train=False, download=True, transform=transform_test)
+    # testset = torchvision.datasets.CIFAR10(root='C:/cifar-10/', split='val', transform=transform_test)
 
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=256, shuffle=True, num_workers=0)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=0)
 testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=0)
 #
 #
@@ -232,7 +246,8 @@ nets = {
     # 'resdualnet18_pw': ResDaulNet18_TP3(),
     # 'resdualnet18': ResDaulNet18_TP4(),
     # 'resdualnet18_swish_1': ResDaulNet18_TP5(),
-    'resdual5_imagenet': ResDaulNet18_TPI5(),
+    # 'resdual5_imagenet': ResDaulNet18_TPI5(),
+    'resdual5_cifar-10': ResDaulNet18_TP5(),
     # 'rexnet18_0_relu_relu': RexNet18_T0(),
     # 'rexnet18_1_crelu': RexNet18_T1(),
 }
@@ -246,12 +261,10 @@ for netkey in nets.keys():
     net = nets[netkey]
     net = net.to(device)
 
-    from torchinfo import summary
-
     os.makedirs(log_path, exist_ok=True)
     with open(log_path + '/log.txt', 'w') as f:
         f.write('Networks : %s\n' % netkey)
-        summary(net, (1, 3, 224, 224), fd=f)
+        summary(net, (1, 3, input_size, input_size), fd=f)
 
     if device == 'cuda':
         net = torch.nn.DataParallel(net)  # Not support ONNX converting
@@ -270,7 +283,7 @@ for netkey in nets.keys():
     # optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
     # optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-4)
     # optimizer = optim.Adam(net.parameters(), lr=0.0025)  ## Conf.2
-    optimizer = optim.Adam(net.parameters(), lr=0.0025)  ## Conf.2
+    optimizer = optim.Adam(net.parameters(), lr=config['initial_lr'])  ## Conf.2
     # optimizer = optim.Adam(net.parameters(), lr=0.001)  ## Conf.2
     # optimizer = optim.RMSprop(net.parameters(), lr=0.256, alpha=0.99, eps=1e-08, weight_decay=0.9, momentum=0.9, centered=False) # Conf.1
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=int(max_epoch * 1.0))
@@ -281,12 +294,18 @@ for netkey in nets.keys():
     for epoch in range(start_epoch, start_epoch + max_epoch):
         ep, train_loss, train_acc = train(epoch, netkey, plotter)
         ep, test_loss, test_acc = test(epoch, netkey, plotter)
+        scheduler.step()
+
+        ## Save pth file...
         save_checkpoint(
             ep,
             [train_acc, test_acc],
             [train_loss, test_loss],
             net,
             optimizer,
+            scheduler,
+            config['initial_lr'],
+            config['dataset'],
+            config['train_batch_size'],
             './outputs/checkpoint_%03d.pth' % ep
         )
-        scheduler.step()

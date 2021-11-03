@@ -18,6 +18,8 @@ from visdom import Visdom
 
 import torchvision
 import torchvision.transforms as transforms
+from matplotlib import pyplot as plt
+import seaborn as sns
 
 class VisdomLinePlotter(object):
     """Plots to Visdom"""
@@ -170,7 +172,16 @@ def format_time(seconds):
     return f
 
 
-def save_checkpoint(epoch, acc, loss, model, optimizer, filename):
+def save_checkpoint(epoch,
+                    acc,
+                    loss,
+                    model,
+                    optimizer,
+                    scheduler,
+                    initial_lr,
+                    dataset,
+                    train_size,
+                    filename):
     if type(epoch) is not int:
         raise TypeError("Epoch must be int type")
     if type(acc) is not list:
@@ -183,7 +194,11 @@ def save_checkpoint(epoch, acc, loss, model, optimizer, filename):
         'acc' : acc, # [train_acc, test_acc]
         'loss' : loss, # [train_loss, test_loss]
         'state_dict' : model.state_dict(),
-        'optimizer' : optimizer.state_dict()
+        'optimizer' : optimizer.state_dict(),
+        'lr_scheduler' : scheduler.state_dict(),
+        'initial_lr' : initial_lr,
+        'dataset' : dataset,
+        'train_batch' : train_size
     }
 
     torch.save(state, filename)
