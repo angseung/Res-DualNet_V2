@@ -8,12 +8,12 @@ from utils import data_loader, progress_bar
 import math
 
 config ={
-    'mode' : 'train',
+    'mode' : 'test',
     'dataset' : 'ImageNet',
     'pth_path' : "./outputs/resdual5_imagenet/ckpt.pth",
     'input_size' : 224,
-    'batch_size' : 256,
-    'max_epoch' : 200
+    'batch_size' : 100,
+    'max_epoch' : 100
 }
 
 def train(ep):
@@ -86,16 +86,15 @@ else:
 # ImageNet
 net = ResDaulNet18_TPI5()
 
-# Optimizer
-optimizer = optim.Adam(net.parameters(), lr=0.0025)
-
 # CIFAR-10
 # net = ResDaulNet18_TP5()
+
+# Optimizer
+optimizer = optim.Adam(net.parameters(), lr=0.0025)
 
 net.to(device)
 net = torch.nn.DataParallel(net)
 cudnn.benchmark = True
-optimizer = optim.Adam(net.parameters(), lr=0.001)
 
 # Load checkpoint data
 # {net : net.state_dict,
@@ -114,9 +113,6 @@ epoch = SAVEDAT['epoch']
 model_name = net.module.__class__.__name__
 print("%s model was loaded successfully... [best validation acc : %.3f at %03d epoch]"
       %(model_name, acc, epoch))
-
-# input_size = 32
-# dataset = "CIFAR-10"
 
 dataloader = data_loader(
     mode=config['mode'],
