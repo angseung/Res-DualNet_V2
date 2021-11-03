@@ -44,7 +44,7 @@ config = {
     'train_batch_size' : 256,
     'dataset' : 'CIFAR-10' # [ImageNet, CIFAR-10]
 }
-
+resume = False
 Dataset = config['dataset']
 max_epoch = config['max_epoch']
 batch_size = config['train_batch_size']
@@ -219,6 +219,7 @@ def test(epoch, dir_path=None, plotter=None):
         state = {
             'net': net.state_dict(),
             'optimizer' : optimizer.state_dict(),
+            # 'scheduler' : scheduler.state_dict(),
             'acc': acc,
             'epoch': epoch,
         }
@@ -270,14 +271,6 @@ for netkey in nets.keys():
         net = torch.nn.DataParallel(net)  # Not support ONNX converting
         # cudnn.benchmark = True
         pass
-    # if args.resume:
-    #     # Load checkpoint.
-    #     print('==> Resuming from checkpoint..')
-    #     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    #     checkpoint = torch.load('./checkpoint/ckpt.pth')
-    #     net.load_state_dict(checkpoint['net'])
-    #     best_acc = checkpoint['acc']
-    #     start_epoch = checkpoint['epoch']
 
     criterion = nn.CrossEntropyLoss()
     # optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
@@ -286,27 +279,38 @@ for netkey in nets.keys():
     optimizer = optim.Adam(net.parameters(), lr=config['initial_lr'])  ## Conf.2
     # optimizer = optim.Adam(net.parameters(), lr=0.001)  ## Conf.2
     # optimizer = optim.RMSprop(net.parameters(), lr=0.256, alpha=0.99, eps=1e-08, weight_decay=0.9, momentum=0.9, centered=False) # Conf.1
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=int(max_epoch * 1.0))
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=int(max_epoch * 1.0))
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 2, gamma=0.97, last_epoch=-1, verbose=True)
     # from lr_scheduler import CosineAnnealingWarmUpRestarts
     # scheduler = CosineAnnealingWarmUpRestarts(optimizer, T_0=50, T_mult=2, eta_max=0.1,  T_up=10, gamma=0.5)
 
-    for epoch in range(start_epoch, start_epoch + max_epoch):
+    if resume:
+        # Load checkpoint.
+        print('==> Resuming from checkpoint..')
+        # assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
+        checkpoint = torch.load(log_path + '/ckpt_bak.pth')
+        net.load_state_dict(checkpoint['net'])
+        # scheduler.load_state_dict(checkpoint['scheduler'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        best_acc = checkpoint['acc']
+        start_epoch = checkpoint['epoch'] + 1
+
+    for epoch in range(start_epoch, max_epoch - start_epoch):
         ep, train_loss, train_acc = train(epoch, netkey, plotter)
         ep, test_loss, test_acc = test(epoch, netkey, plotter)
         # scheduler.step()
         print('current lr : %.6f' % optimizer.defaults['lr'])
 
         ## Save pth file...
-        save_checkpoint(
-            ep,
-            [train_acc, test_acc],
-            [train_loss, test_loss],
-            net,
-            optimizer,
-            scheduler,
-            config['initial_lr'],
-            config['dataset'],
-            config['train_batch_size'],
-            './outputs/checkpoint_%03d.pth' % ep
-        )
+        # save_checkpoint(
+        #     ep,
+        #     [train_acc, test_acc],
+        #     [train_loss, test_loss],
+        #     net,
+        #     optimizer,
+        #     scheduler,
+        #     config['initial_lr'],
+        #     config['dataset'],
+        #     config['train_batch_size'],
+        #     './outputs/checkpoint_%03d.pth' % ep
+        # )
