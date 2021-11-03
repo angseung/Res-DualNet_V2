@@ -170,7 +170,7 @@ def train(epoch, dir_path=None, plotter=None):
         f.write('Epoch [%d] |Train| Loss: %.3f, Acc: %.3f \t' % (
             epoch, train_loss / (batch_idx + 1), 100. * correct / total))
 
-    return (epoch, train_loss, 100. * correct / total)
+    return (epoch, train_loss / (batch_idx + 1), 100. * correct / total)
 
 
 def test(epoch, dir_path=None, plotter=None):
@@ -207,8 +207,6 @@ def test(epoch, dir_path=None, plotter=None):
                 tepoch.set_postfix(loss=test_loss / (batch_idx + 1), accuracy=100. * correct / total)
     acc = 100. * correct / total
 
-    return (epoch, test_loss, acc)
-
     # visualization
     if plotter is not None:
         plotter[0].plot('loss', 'val', 'Class Loss', epoch, test_loss / (batch_idx + 1))
@@ -235,6 +233,8 @@ def test(epoch, dir_path=None, plotter=None):
 
     with open(dir_path + '/log.txt', 'a') as f:
         f.write('|Test| Loss: %.3f, Acc: %.3f \n' % (test_loss / (batch_idx + 1), acc))
+
+    return (epoch, test_loss, acc)
 
 
 # Model
@@ -294,7 +294,8 @@ for netkey in nets.keys():
     for epoch in range(start_epoch, start_epoch + max_epoch):
         ep, train_loss, train_acc = train(epoch, netkey, plotter)
         ep, test_loss, test_acc = test(epoch, netkey, plotter)
-        scheduler.step()
+        # scheduler.step()
+        print('current lr : %.6f' % optimizer.defaults['lr'])
 
         ## Save pth file...
         save_checkpoint(

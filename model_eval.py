@@ -20,11 +20,19 @@ torch.cuda.manual_seed(random_seed)
 torch.cuda.manual_seed_all(random_seed)  # multi-GPU
 np.random.seed(random_seed)
 
+# config ={
+#     'mode' : 'test',
+#     'dataset' : 'ImageNet',
+#     'pth_path' : "./outputs/resdual5_imagenet/ckpt.pth",
+#     'input_size' : 224,
+#     'batch_size' : 256,
+#     'max_epoch' : 100
+# }
 config ={
-    'mode' : 'test',
-    'dataset' : 'ImageNet',
-    'pth_path' : "./outputs/resdual5_imagenet/ckpt.pth",
-    'input_size' : 224,
+    'mode' : 'train',
+    'dataset' : 'CIFAR-10',
+    'pth_path' : './outputs/checkpoint_001.pth',
+    'input_size' : 32,
     'batch_size' : 256,
     'max_epoch' : 100
 }
@@ -97,13 +105,10 @@ else:
     raise NotImplementedError('CUDA Device needed to run this code...')
 
 # ImageNet
-net = ResDaulNet18_TPI5()
+# net = ResDaulNet18_TPI5()
 
 # CIFAR-10
-# net = ResDaulNet18_TP5()
-
-# Optimizer
-optimizer = optim.Adam(net.parameters(), lr=0.0025)
+net = ResDaulNet18_TP5()
 
 net.to(device)
 net = torch.nn.DataParallel(net)
@@ -118,10 +123,20 @@ net = torch.nn.DataParallel(net)
 pth_path = config['pth_path']
 SAVEDAT = torch.load(pth_path)
 
-net.load_state_dict(SAVEDAT['net'])
-optimizer.load_state_dict(SAVEDAT['optimizer'])
-acc = SAVEDAT['acc']
+net.load_state_dict(SAVEDAT['state_dict'])
+acc = SAVEDAT['acc'][1]
 epoch = SAVEDAT['epoch']
+initial_lr = SAVEDAT['initial_lr']
+train_batch = SAVEDAT['train_batch']
+
+# Optimizer
+optimizer = optim.Adam(net.parameters(), lr=initial_lr)
+optimizer.load_state_dict(SAVEDAT['optimizer'])
+
+## Scheduler
+max_epoch = 100
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=int(max_epoch * 1.0))
+scheduler.load_state_dict(SAVEDAT['lr_scheduler'])
 
 model_name = net.module.__class__.__name__
 print("%s model was loaded successfully... [best validation acc : %.3f at %03d epoch]"
@@ -152,6 +167,9 @@ if config['mode'] == 'train':
     print("Resume training from %03d epoch..." % (epoch + 1))
     for ep in range(epoch + 1, max_epoch):
         train_acc = train(ep)
+        print('current lr : %.6f' % optimizer.defaults['lr'])
+        # test_acc = test()
+        # scheduler.step()
 
     print("Training completed...\n\t[Training accuracy : %.3f at %03d epoch]"
           % (train_acc, ep))
