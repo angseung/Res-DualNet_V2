@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 import os
 import argparse
-from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter
+from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_checkpoint
 from models import *
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -156,6 +156,8 @@ def train(epoch, dir_path=None, plotter=None):
         f.write('Epoch [%d] |Train| Loss: %.3f, Acc: %.3f \t' % (
             epoch, train_loss / (batch_idx + 1), 100. * correct / total))
 
+    return (epoch, train_loss, 100. * correct / total)
+
 
 def test(epoch, dir_path=None, plotter=None):
     global best_acc
@@ -190,6 +192,8 @@ def test(epoch, dir_path=None, plotter=None):
 
                 tepoch.set_postfix(loss=test_loss / (batch_idx + 1), accuracy=100. * correct / total)
     acc = 100. * correct / total
+
+    return (epoch, test_loss, acc)
 
     # visualization
     if plotter is not None:
@@ -275,6 +279,14 @@ for netkey in nets.keys():
     # scheduler = CosineAnnealingWarmUpRestarts(optimizer, T_0=50, T_mult=2, eta_max=0.1,  T_up=10, gamma=0.5)
 
     for epoch in range(start_epoch, start_epoch + max_epoch):
-        train(epoch, netkey, plotter)
-        test(epoch, netkey, plotter)
+        ep, train_loss, train_acc = train(epoch, netkey, plotter)
+        ep, test_loss, test_acc = test(epoch, netkey, plotter)
+        save_checkpoint(
+            ep,
+            [train_acc, test_acc],
+            [train_loss, test_loss],
+            net,
+            optimizer,
+            './outputs/checkpoint_%03d.pth' % ep
+        )
         scheduler.step()

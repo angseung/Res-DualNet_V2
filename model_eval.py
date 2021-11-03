@@ -7,12 +7,25 @@ from models.resnetCA import ResDaulNet18_TPI5, ResDaulNet18_TP5
 from utils import data_loader, progress_bar
 import math
 
+# reproducible option
+import random
+import numpy as np
+
+random_seed = 1
+torch.manual_seed(random_seed)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+random.seed(random_seed)
+torch.cuda.manual_seed(random_seed)
+torch.cuda.manual_seed_all(random_seed)  # multi-GPU
+np.random.seed(random_seed)
+
 config ={
     'mode' : 'test',
     'dataset' : 'ImageNet',
     'pth_path' : "./outputs/resdual5_imagenet/ckpt.pth",
     'input_size' : 224,
-    'batch_size' : 100,
+    'batch_size' : 256,
     'max_epoch' : 100
 }
 
@@ -94,7 +107,7 @@ optimizer = optim.Adam(net.parameters(), lr=0.0025)
 
 net.to(device)
 net = torch.nn.DataParallel(net)
-cudnn.benchmark = True
+# cudnn.benchmark = True
 
 # Load checkpoint data
 # {net : net.state_dict,
