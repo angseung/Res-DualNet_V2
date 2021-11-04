@@ -1,3 +1,6 @@
+import os
+import argparse
+import random
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 import torchvision
@@ -5,8 +8,7 @@ import torchvision.transforms as transforms
 import torch.onnx
 from torchinfo import summary
 from tqdm import tqdm
-import os
-import argparse
+import numpy as np
 from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_checkpoint
 from models import *
 
@@ -18,16 +20,10 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-# reproducible option
-import random
-import numpy as np
 
-random_seed = 1
-
-
-def seed_worker(worker_id):
+def seed_worker(worker_id: None) -> None:
     worker_seed = torch.initial_seed() % 2 ** 32
-    numpy.random.seed(worker_seed)
+    np.random.seed(worker_seed)
     random.seed(worker_seed)
 
 
@@ -51,7 +47,7 @@ config = {
     "initial_lr": 0.0025,
     "train_batch_size": 256,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
-    "train_resume": False,
+    "train_resume": True,
 }
 
 Dataset = config["dataset"]
@@ -131,7 +127,7 @@ classes = (
 )
 
 # Training
-def train(epoch, dir_path=None, plotter=None):
+def train(epoch, dir_path=None, plotter=None) -> None:
     print("\nEpoch: %d" % epoch)
     net.train()
     train_loss = 0
@@ -191,7 +187,7 @@ def train(epoch, dir_path=None, plotter=None):
     return (epoch, train_loss / (batch_idx + 1), 100.0 * correct / total)
 
 
-def test(epoch, dir_path=None, plotter=None):
+def test(epoch, dir_path=None, plotter=None) -> None:
     global best_acc
     net.eval()
     test_loss = 0
@@ -296,7 +292,7 @@ for netkey in nets.keys():
         best_acc = checkpoint["acc"]
         start_epoch = checkpoint["epoch"] + 1
 
-    for epoch in range(start_epoch, max_epoch - start_epoch):
-        ep, train_loss, train_acc = train(epoch, netkey, plotter)
-        ep, test_loss, test_acc = test(epoch, netkey, plotter)
+    for epoch in range(start_epoch, max_epoch):
+        train(epoch, netkey, plotter)
+        test(epoch, netkey, plotter)
         scheduler.step()
