@@ -1,14 +1,10 @@
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
-
 import torchvision
 import torchvision.transforms as transforms
 import torch.onnx
-
 from torchinfo import summary
-
 from tqdm import tqdm
-
 import os
 import argparse
 from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_checkpoint
@@ -33,8 +29,9 @@ random.seed(random_seed)
 torch.cuda.manual_seed(random_seed)
 torch.cuda.manual_seed_all(random_seed)  # multi-GPU
 np.random.seed(random_seed)
+# torch.use_deterministic_algorithms(True)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
@@ -44,7 +41,7 @@ config = {
     'train_batch_size' : 256,
     'dataset' : 'CIFAR-10' # [ImageNet, CIFAR-10]
 }
-resume = False
+
 Dataset = config['dataset']
 max_epoch = config['max_epoch']
 batch_size = config['train_batch_size']
@@ -88,8 +85,14 @@ elif Dataset == 'CIFAR-10':
     testset = torchvision.datasets.CIFAR10(root='C:/cifar-10/', train=False, download=True, transform=transform_test)
     # testset = torchvision.datasets.CIFAR10(root='C:/cifar-10/', split='val', transform=transform_test)
 
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=0)
-testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=0)
+trainloader = torch.utils.data.DataLoader(trainset,
+                                          batch_size=batch_size,
+                                          shuffle=False,
+                                          num_workers=0)
+testloader = torch.utils.data.DataLoader(testset,
+                                         batch_size=100,
+                                         shuffle=False,
+                                         num_workers=0)
 #
 #
 # # # PLAIN
@@ -284,6 +287,7 @@ for netkey in nets.keys():
     # from lr_scheduler import CosineAnnealingWarmUpRestarts
     # scheduler = CosineAnnealingWarmUpRestarts(optimizer, T_0=50, T_mult=2, eta_max=0.1,  T_up=10, gamma=0.5)
 
+    resume = 0
     if resume:
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
@@ -291,6 +295,7 @@ for netkey in nets.keys():
         checkpoint = torch.load(log_path + '/ckpt_bak.pth')
         net.load_state_dict(checkpoint['net'])
         # scheduler.load_state_dict(checkpoint['scheduler'])
+        # optimizer = optim.Adam(net.parameters())
         optimizer.load_state_dict(checkpoint['optimizer'])
         best_acc = checkpoint['acc']
         start_epoch = checkpoint['epoch'] + 1
