@@ -39,7 +39,7 @@ torch.cuda.manual_seed_all(random_seed)  # multi-GPU
 np.random.seed(random_seed)
 # torch.use_deterministic_algorithms(True)
 
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
@@ -47,7 +47,8 @@ config = {
     'max_epoch' : 100,
     'initial_lr' : 0.0025,
     'train_batch_size' : 256,
-    'dataset' : 'CIFAR-10' # [ImageNet, CIFAR-10]
+    'dataset' : 'CIFAR-10', # [ImageNet, CIFAR-10]
+    'train_resume' : False
 }
 
 Dataset = config['dataset']
@@ -65,7 +66,6 @@ if Dataset == 'ImageNet':
     )
     transform_train = transforms.Compose([
         transforms.RandomResizedCrop(224),
-        # transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         normalize]
@@ -115,15 +115,14 @@ elif Dataset == 'CIFAR-10':
         download=True,
         transform=transform_test
     )
-    # testset = torchvision.datasets.CIFAR10(root='C:/cifar-10/', split='val', transform=transform_test)
 
 trainloader = torch.utils.data.DataLoader(
     trainset,
     batch_size=batch_size,
-    shuffle=False,
-    num_workers=0
-    # worker_init_fn=seed_worker,
-    # generator=g,
+    shuffle=True,
+    num_workers=0,
+    worker_init_fn=seed_worker,
+    generator=g
 )
 testloader = torch.utils.data.DataLoader(
     testset,
@@ -222,14 +221,11 @@ def test(epoch, dir_path=None, plotter=None):
             'optimizer' : optimizer.state_dict(),
             'scheduler' : scheduler.state_dict(),
             'acc': acc,
-            'epoch': epoch,
+            'epoch': epoch
         }
         if not os.path.isdir(dir_path):
             os.mkdir(dir_path)
         torch.save(state, './' + dir_path + '/ckpt.pth')
-        # torch.onnx.export(net,
-        #                   torch.empty(1, 3, 224, 224, dtype=torch.float32, device=device),
-        #                   dir_path + '/output.onnx')
 
         best_acc = acc
 
@@ -243,15 +239,8 @@ def test(epoch, dir_path=None, plotter=None):
 print('==> Building model..')
 
 nets = {
-    # 'resnet18_vanilla': ResDaulNet18_TP1(),
-    # 'resnet18_mbstyle': ResDaulNet18_TP2(),
-    # 'resdualnet18_pw': ResDaulNet18_TP3(),
-    # 'resdualnet18': ResDaulNet18_TP4(),
-    # 'resdualnet18_swish_1': ResDaulNet18_TP5(),
     # 'resdual5_imagenet': ResDaulNet18_TPI5(),
-    'resdual5_cifar-10': ResDaulNet18_TP5(),
-    # 'rexnet18_0_relu_relu': RexNet18_T0(),
-    # 'rexnet18_1_crelu': RexNet18_T1(),
+    'resdual5_cifar-10': ResDaulNet18_TP5()
 }
 
 for netkey in nets.keys():
@@ -276,22 +265,12 @@ for netkey in nets.keys():
     if device == 'cuda':
         net = torch.nn.DataParallel(net)  # Not support ONNX converting
         # cudnn.benchmark = True
-        pass
 
     criterion = nn.CrossEntropyLoss()
-    # optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-    # optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-4)
-    # optimizer = optim.Adam(net.parameters(), lr=0.0025)  ## Conf.2
-    optimizer = optim.Adam(net.parameters(), lr=config['initial_lr'])  ## Conf.2
-    # optimizer = optim.Adam(net.parameters(), lr=0.001)  ## Conf.2
-    # optimizer = optim.RMSprop(net.parameters(), lr=0.256, alpha=0.99, eps=1e-08, weight_decay=0.9, momentum=0.9, centered=False) # Conf.1
-    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=int(max_epoch * 1.0))
-    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 2, gamma=0.97, last_epoch=-1, verbose=True)
-    # from lr_scheduler import CosineAnnealingWarmUpRestarts
-    # scheduler = CosineAnnealingWarmUpRestarts(optimizer, T_0=50, T_mult=2, eta_max=0.1,  T_up=10, gamma=0.5)
+    optimizer = optim.Adam(net.parameters(), lr=config['initial_lr'])
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=int(max_epoch * 1.0))
 
-    resume = True
-    if resume:
+    if config['train_resume']:
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
         # assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
@@ -306,4 +285,3 @@ for netkey in nets.keys():
         ep, train_loss, train_acc = train(epoch, netkey, plotter)
         ep, test_loss, test_acc = test(epoch, netkey, plotter)
         scheduler.step()
-        # print('current lr : %.6f' % optimizer.defaults['lr'])
