@@ -27,6 +27,7 @@ def seed_worker(worker_id: None) -> None:
     random.seed(worker_seed)
 
 
+random_seed = 1
 g = torch.Generator()
 g.manual_seed(random_seed)
 torch.manual_seed(random_seed)

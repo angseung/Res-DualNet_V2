@@ -1,16 +1,17 @@
+import math
+import random
+import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.nn as nn
 from torchinfo import summary
+from tqdm import tqdm
 from models.resnetCA import ResDaulNet18_TPI5, ResDaulNet18_TP5
 from utils import data_loader, progress_bar
-import math
+
 
 # reproducible option
-import random
-import numpy as np
-
 random_seed = 1
 torch.manual_seed(random_seed)
 torch.backends.cudnn.deterministic = True
@@ -46,28 +47,22 @@ def test():
 
     # Turn off back propagation...
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(dataloader):
-            inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
-            loss = criterion(outputs, targets)
+        with tqdm(dataloader, unit="batch") as tepoch:
+            for batch_idx, (inputs, targets) in enumerate(tepoch):
+                tepoch.set_description(f"Test Epoch {epoch}")
 
-            test_loss += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
+                inputs, targets = inputs.to(device), targets.to(device)
+                outputs = net(inputs)
+                loss = criterion(outputs, targets)
 
-            progress_bar(
-                batch_idx,
-                len(dataloader),
-                "Loss: %.3f | Acc: %.3f%% (%d/%d)"
-                % (
-                    test_loss / (batch_idx + 1),
-                    100.0 * correct / total,
-                    correct,
-                    total,
-                ),
-            )
+                test_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
 
+                tepoch.set_postfix(
+                    loss=test_loss / (batch_idx + 1), accuracy=100.0 * correct / total
+                )
     test_acc = 100.0 * correct / total
 
     return test_acc
