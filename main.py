@@ -22,6 +22,14 @@ import random
 import numpy as np
 
 random_seed = 1
+
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    numpy.random.seed(worker_seed)
+    random.seed(worker_seed)
+
+g = torch.Generator()
+g.manual_seed(random_seed)
 torch.manual_seed(random_seed)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
@@ -51,14 +59,17 @@ print('==> Preparing data..')
 
 if Dataset == 'ImageNet':
     input_size = 224
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+    normalize = transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
     transform_train = transforms.Compose([
         transforms.RandomResizedCrop(224),
         # transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        normalize])
+        normalize]
+    )
 
     transform_test = transforms.Compose([
         transforms.Resize(256),
@@ -66,71 +77,62 @@ if Dataset == 'ImageNet':
         transforms.ToTensor(),
         normalize
     ])
-    trainset = torchvision.datasets.ImageNet(root='C:/imagenet/', split='train', transform=transform_train)
-    testset = torchvision.datasets.ImageNet(root='C:/imagenet/', split='val', transform=transform_test)
+    trainset = torchvision.datasets.ImageNet(
+        root='C:/imagenet/',
+        split='train',
+        transform=transform_train
+    )
+    testset = torchvision.datasets.ImageNet(
+        root='C:/imagenet/',
+        split='val',
+        transform=transform_test
+    )
 
 elif Dataset == 'CIFAR-10':
     input_size = 32
-    normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
-                                     std=[0.2023, 0.1994, 0.2010])
+    normalize = transforms.Normalize(
+        mean=[0.4914, 0.4822, 0.4465],
+        std=[0.2023, 0.1994, 0.2010]
+    )
     transform_train = transforms.Compose([
         transforms.ToTensor(),
-        normalize])
+        normalize
+    ])
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
         normalize
     ])
-    trainset = torchvision.datasets.CIFAR10(root='C:/cifar-10/', train=True, download=True, transform=transform_train)
-    testset = torchvision.datasets.CIFAR10(root='C:/cifar-10/', train=False, download=True, transform=transform_test)
+    trainset = torchvision.datasets.CIFAR10(
+        root='C:/cifar-10/',
+        train=True,
+        download=True,
+        transform=transform_train
+    )
+    testset = torchvision.datasets.CIFAR10(
+        root='C:/cifar-10/',
+        train=False,
+        download=True,
+        transform=transform_test
+    )
     # testset = torchvision.datasets.CIFAR10(root='C:/cifar-10/', split='val', transform=transform_test)
 
-trainloader = torch.utils.data.DataLoader(trainset,
-                                          batch_size=batch_size,
-                                          shuffle=False,
-                                          num_workers=0)
-testloader = torch.utils.data.DataLoader(testset,
-                                         batch_size=100,
-                                         shuffle=False,
-                                         num_workers=0)
-#
-#
-# # # PLAIN
-# # normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],
-# #                                      std=[0.5, 0.5, 0.5])
-#
-# # # IMAGENET
-# normalize = transforms.Normalize(mean = [0.485, 0.456, 0.406],
-#                                  std = [0.229, 0.224, 0.225])
-#
-# # # CIFAR10
-# # normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
-# #                                  std=[0.2023, 0.1994, 0.2010])
-#
-# transform_train = transforms.Compose([
-#     transforms.RandomResizedCrop(224),
-#     # transforms.RandomCrop(32, padding=4),
-#     transforms.RandomHorizontalFlip(),
-#     transforms.ToTensor(),
-#     normalize])
-#
-# transform_test = transforms.Compose([
-#     transforms.Resize(256),
-#     transforms.CenterCrop(224),
-#     transforms.ToTensor(),
-#     normalize
-# ])
-#
-# # trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-# trainset = torchvision.datasets.ImageNet(root='C:/imagenet/', split = 'train', transform=transform_train)
-# trainloader = torch.utils.data.DataLoader(trainset, batch_size=256, shuffle=True, num_workers=0)
-#
-# # testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-# testset = torchvision.datasets.ImageNet(root='C:/imagenet/', split = 'val', transform=transform_test)
-# testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=0)
+trainloader = torch.utils.data.DataLoader(
+    trainset,
+    batch_size=batch_size,
+    shuffle=False,
+    num_workers=0
+    # worker_init_fn=seed_worker,
+    # generator=g,
+)
+testloader = torch.utils.data.DataLoader(
+    testset,
+    batch_size=100,
+    shuffle=False,
+    num_workers=0
+)
 
-
-# classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 # Training
 def train(epoch, dir_path=None, plotter=None):
@@ -157,14 +159,15 @@ def train(epoch, dir_path=None, plotter=None):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            tepoch.set_postfix(loss=train_loss / (batch_idx + 1), accuracy=100. * correct / total)
+            tepoch.set_postfix(
+                loss=train_loss / (batch_idx + 1),
+                accuracy=100. * correct / total
+            )
             if plotter is not None:
                 plotter[0].plot('batch_loss', 'train_epoch%d' % epoch, 'Batch Loss', batch_idx,
                                 train_loss / (batch_idx + 1))
                 plotter[0].plot('batch_acc', 'train_epoch%d' % epoch, 'Batch Acc', batch_idx, 100. * correct / total)
 
-            # progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-            #              % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
     if plotter is not None:
         plotter[0].plot('loss', 'train', 'Class Loss', epoch, train_loss / (batch_idx + 1))
         plotter[0].plot('acc', 'train', 'Class Accuracy', epoch, 100. * correct / total)
@@ -202,11 +205,6 @@ def test(epoch, dir_path=None, plotter=None):
                 total += targets.size(0)
                 correct += predicted.eq(targets).sum().item()
 
-                # progress_bar(batch_idx,
-                #              len(testloader),
-                #              'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                #                  test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
-
                 tepoch.set_postfix(loss=test_loss / (batch_idx + 1), accuracy=100. * correct / total)
     acc = 100. * correct / total
 
@@ -222,7 +220,7 @@ def test(epoch, dir_path=None, plotter=None):
         state = {
             'net': net.state_dict(),
             'optimizer' : optimizer.state_dict(),
-            # 'scheduler' : scheduler.state_dict(),
+            'scheduler' : scheduler.state_dict(),
             'acc': acc,
             'epoch': epoch,
         }
@@ -268,7 +266,12 @@ for netkey in nets.keys():
     os.makedirs(log_path, exist_ok=True)
     with open(log_path + '/log.txt', 'w') as f:
         f.write('Networks : %s\n' % netkey)
-        summary(net, (1, 3, input_size, input_size), fd=f)
+        m_info = summary(
+            net,
+            (1, 3, input_size, input_size),
+            verbose=0
+        )
+        f.write('%s\n' % str(m_info))
 
     if device == 'cuda':
         net = torch.nn.DataParallel(net)  # Not support ONNX converting
@@ -287,15 +290,14 @@ for netkey in nets.keys():
     # from lr_scheduler import CosineAnnealingWarmUpRestarts
     # scheduler = CosineAnnealingWarmUpRestarts(optimizer, T_0=50, T_mult=2, eta_max=0.1,  T_up=10, gamma=0.5)
 
-    resume = 0
+    resume = True
     if resume:
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
         # assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
         checkpoint = torch.load(log_path + '/ckpt_bak.pth')
         net.load_state_dict(checkpoint['net'])
-        # scheduler.load_state_dict(checkpoint['scheduler'])
-        # optimizer = optim.Adam(net.parameters())
+        scheduler.load_state_dict(checkpoint['scheduler'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         best_acc = checkpoint['acc']
         start_epoch = checkpoint['epoch'] + 1
@@ -303,19 +305,5 @@ for netkey in nets.keys():
     for epoch in range(start_epoch, max_epoch - start_epoch):
         ep, train_loss, train_acc = train(epoch, netkey, plotter)
         ep, test_loss, test_acc = test(epoch, netkey, plotter)
-        # scheduler.step()
-        print('current lr : %.6f' % optimizer.defaults['lr'])
-
-        ## Save pth file...
-        # save_checkpoint(
-        #     ep,
-        #     [train_acc, test_acc],
-        #     [train_loss, test_loss],
-        #     net,
-        #     optimizer,
-        #     scheduler,
-        #     config['initial_lr'],
-        #     config['dataset'],
-        #     config['train_batch_size'],
-        #     './outputs/checkpoint_%03d.pth' % ep
-        # )
+        scheduler.step()
+        # print('current lr : %.6f' % optimizer.defaults['lr'])

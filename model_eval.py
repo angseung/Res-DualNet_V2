@@ -20,19 +20,11 @@ torch.cuda.manual_seed(random_seed)
 torch.cuda.manual_seed_all(random_seed)  # multi-GPU
 np.random.seed(random_seed)
 
-# config ={
-#     'mode' : 'test',
-#     'dataset' : 'ImageNet',
-#     'pth_path' : "./outputs/resdual5_imagenet/ckpt.pth",
-#     'input_size' : 224,
-#     'batch_size' : 256,
-#     'max_epoch' : 100
-# }
 config ={
-    'mode' : 'train',
-    'dataset' : 'CIFAR-10',
-    'pth_path' : './outputs/checkpoint_001.pth',
-    'input_size' : 32,
+    'mode' : 'test',
+    'dataset' : 'ImageNet',
+    'pth_path' : "./outputs/resdual5_imagenet/ckpt.pth",
+    'input_size' : 224,
     'batch_size' : 256,
     'max_epoch' : 100
 }
@@ -65,6 +57,7 @@ def train(ep):
     train_acc = 100. * correct / total
 
     return train_acc
+
 
 def test():
     # Model conversion to evaludation mode...
@@ -100,15 +93,15 @@ def test():
 use_gpu = torch.cuda.is_available()  # use GPU
 
 if use_gpu:
-    device = torch.device("cuda")
+    device = torch.device("cuda:0")
 else:
     raise NotImplementedError('CUDA Device needed to run this code...')
 
 # ImageNet
-# net = ResDaulNet18_TPI5()
+net = ResDaulNet18_TPI5()
 
 # CIFAR-10
-net = ResDaulNet18_TP5()
+# net = ResDaulNet18_TP5()
 
 net.to(device)
 net = torch.nn.DataParallel(net)

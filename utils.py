@@ -22,17 +22,17 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 
 # reproducible option
-import random
-import numpy as np
-
-random_seed = 1
-torch.manual_seed(random_seed)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-random.seed(random_seed)
-torch.cuda.manual_seed(random_seed)
-torch.cuda.manual_seed_all(random_seed)  # multi-GPU
-np.random.seed(random_seed)
+# import random
+# import numpy as np
+#
+# random_seed = 1
+# torch.manual_seed(random_seed)
+# torch.backends.cudnn.deterministic = True
+# torch.backends.cudnn.benchmark = False
+# random.seed(random_seed)
+# torch.cuda.manual_seed(random_seed)
+# torch.cuda.manual_seed_all(random_seed)  # multi-GPU
+# np.random.seed(random_seed)
 
 class VisdomLinePlotter(object):
     """Plots to Visdom"""
