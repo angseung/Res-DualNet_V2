@@ -265,10 +265,15 @@ for netkey in nets.keys():
     net = net.to(device)
 
     os.makedirs(log_path, exist_ok=True)
-    with open(log_path + "/log.txt", "w") as f:
-        f.write("Networks : %s\n" % netkey)
-        m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
-        f.write("%s\n" % str(m_info))
+
+    if not config["train_resume"]:
+        with open(log_path + "/log.txt", "w") as f:
+            f.write("Networks : %s\n" % netkey)
+            m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
+            f.write("%s\n" % str(m_info))
+    elif config["train_resume"]:
+        with open(log_path + "/log.txt", "a") as f:
+            f.write("Train resumed from this point...\n")
 
     if device == "cuda":
         net = torch.nn.DataParallel(net)  # Not support ONNX converting
@@ -284,7 +289,7 @@ for netkey in nets.keys():
         # Load checkpoint.
         print("==> Resuming from checkpoint..")
         # assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-        checkpoint = torch.load(log_path + "/ckpt_bak.pth")
+        checkpoint = torch.load(log_path + "/ckpt.pth")
         net.load_state_dict(checkpoint["net"])
         scheduler.load_state_dict(checkpoint["scheduler"])
         optimizer.load_state_dict(checkpoint["optimizer"])
