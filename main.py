@@ -27,18 +27,6 @@ def seed_worker(worker_id: None) -> None:
     random.seed(worker_seed)
 
 
-random_seed = 1
-g = torch.Generator()
-g.manual_seed(random_seed)
-torch.manual_seed(random_seed)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-random.seed(random_seed)
-torch.cuda.manual_seed(random_seed)
-torch.cuda.manual_seed_all(random_seed)  # multi-GPU
-np.random.seed(random_seed)
-# torch.use_deterministic_algorithms(True)
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
@@ -49,7 +37,21 @@ config = {
     "train_batch_size": 256,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": True,
+    "set_random_seed" : True
 }
+
+if config["set_random_seed"]:
+    random_seed = 1
+    g = torch.Generator()
+    g.manual_seed(random_seed)
+    torch.manual_seed(random_seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    random.seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
+    torch.cuda.manual_seed_all(random_seed)  # multi-GPU
+    np.random.seed(random_seed)
+    # torch.use_deterministic_algorithms(True)
 
 Dataset = config["dataset"]
 max_epoch = config["max_epoch"]
