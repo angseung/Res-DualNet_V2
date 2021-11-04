@@ -33,7 +33,7 @@ config ={
     'dataset' : 'CIFAR-10',
     'pth_path' : "./outputs/resdual5_cifar-10/ckpt.pth",
     'input_size' : 32,
-    'batch_size' : 256
+    'batch_size' : 100
 }
 
 def test():
