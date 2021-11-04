@@ -12,11 +12,12 @@ import argparse
 from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter
 from models import *
 
-parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
+parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 # parser.add_argument('--lr', default=0.00001, type=float, help='learning rate')
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-parser.add_argument('--resume', '-r', action='store_true',
-                    help='resume from checkpoint')
+parser.add_argument("--lr", default=0.1, type=float, help="learning rate")
+parser.add_argument(
+    "--resume", "-r", action="store_true", help="resume from checkpoint"
+)
 args = parser.parse_args()
 
 # reproducible option
@@ -32,54 +33,66 @@ torch.cuda.manual_seed(random_seed)
 torch.cuda.manual_seed_all(random_seed)  # multi-GPU
 np.random.seed(random_seed)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 max_epoch = 100
 
 # Data Preparing  !!!
-print('==> Preparing data..')
+print("==> Preparing data..")
 
 # # PLAIN
 # normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],
 #                                      std=[0.5, 0.5, 0.5])
 
 # # IMAGENET
-normalize = transforms.Normalize(mean = [0.485, 0.456, 0.406],
-                                 std = [0.229, 0.224, 0.225])
+normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
 # # CIFAR10
 # normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
 #                                  std=[0.2023, 0.1994, 0.2010])
 
-transform_train = transforms.Compose([
-    transforms.RandomResizedCrop(224),
-    # transforms.RandomCrop(32, padding=4),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    normalize])
+transform_train = transforms.Compose(
+    [
+        transforms.RandomResizedCrop(224),
+        # transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        normalize,
+    ]
+)
 
-transform_test = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    normalize
-])
+transform_test = transforms.Compose(
+    [
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        normalize,
+    ]
+)
 
 # trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-trainset = torchvision.datasets.ImageNet(root='C:/imagenet/', split = 'train', transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=256, shuffle=True, num_workers=0)
+trainset = torchvision.datasets.ImageNet(
+    root="C:/imagenet/", split="train", transform=transform_train
+)
+trainloader = torch.utils.data.DataLoader(
+    trainset, batch_size=256, shuffle=True, num_workers=0
+)
 
 # testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-testset = torchvision.datasets.ImageNet(root='C:/imagenet/', split = 'val', transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=0)
+testset = torchvision.datasets.ImageNet(
+    root="C:/imagenet/", split="val", transform=transform_test
+)
+testloader = torch.utils.data.DataLoader(
+    testset, batch_size=100, shuffle=False, num_workers=0
+)
 
 
 # classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 # Training
 def train(epoch, dir_path=None, plotter=None):
-    print('\nEpoch: %d' % epoch)
+    print("\nEpoch: %d" % epoch)
     net.train()
     train_loss = 0
     correct = 0
@@ -102,21 +115,40 @@ def train(epoch, dir_path=None, plotter=None):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            tepoch.set_postfix(loss=train_loss / (batch_idx + 1), accuracy=100. * correct / total)
+            tepoch.set_postfix(
+                loss=train_loss / (batch_idx + 1), accuracy=100.0 * correct / total
+            )
             if plotter is not None:
-                plotter[0].plot('batch_loss', 'train_epoch%d' % epoch, 'Batch Loss', batch_idx,
-                                train_loss / (batch_idx + 1))
-                plotter[0].plot('batch_acc', 'train_epoch%d' % epoch, 'Batch Acc', batch_idx, 100. * correct / total)
+                plotter[0].plot(
+                    "batch_loss",
+                    "train_epoch%d" % epoch,
+                    "Batch Loss",
+                    batch_idx,
+                    train_loss / (batch_idx + 1),
+                )
+                plotter[0].plot(
+                    "batch_acc",
+                    "train_epoch%d" % epoch,
+                    "Batch Acc",
+                    batch_idx,
+                    100.0 * correct / total,
+                )
 
             # progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             #              % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
     if plotter is not None:
-        plotter[0].plot('loss', 'train', 'Class Loss', epoch, train_loss / (batch_idx + 1))
-        plotter[0].plot('acc', 'train', 'Class Accuracy', epoch, 100. * correct / total)
+        plotter[0].plot(
+            "loss", "train", "Class Loss", epoch, train_loss / (batch_idx + 1)
+        )
+        plotter[0].plot(
+            "acc", "train", "Class Accuracy", epoch, 100.0 * correct / total
+        )
 
-    with open('outputs/' + dir_path + '/log.txt', 'a') as f:
-        f.write('Epoch [%d] |Train| Loss: %.3f, Acc: %.3f \t' % (
-            epoch, train_loss / (batch_idx + 1), 100. * correct / total))
+    with open("outputs/" + dir_path + "/log.txt", "a") as f:
+        f.write(
+            "Epoch [%d] |Train| Loss: %.3f, Acc: %.3f \t"
+            % (epoch, train_loss / (batch_idx + 1), 100.0 * correct / total)
+        )
 
 
 def test(epoch, dir_path=None, plotter=None):
@@ -127,9 +159,9 @@ def test(epoch, dir_path=None, plotter=None):
     total = 0
 
     if dir_path is None:
-        dir_path = 'outputs/checkpoint'
+        dir_path = "outputs/checkpoint"
     else:
-        dir_path = 'outputs/' + dir_path
+        dir_path = "outputs/" + dir_path
 
     with torch.no_grad():
         with tqdm(testloader, unit="batch") as tepoch:
@@ -150,39 +182,41 @@ def test(epoch, dir_path=None, plotter=None):
                 #              'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
                 #                  test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
 
-                tepoch.set_postfix(loss=test_loss / (batch_idx + 1), accuracy=100. * correct / total)
-    acc = 100. * correct / total
+                tepoch.set_postfix(
+                    loss=test_loss / (batch_idx + 1), accuracy=100.0 * correct / total
+                )
+    acc = 100.0 * correct / total
 
     # visualization
     if plotter is not None:
-        plotter[0].plot('loss', 'val', 'Class Loss', epoch, test_loss / (batch_idx + 1))
-        plotter[0].plot('acc', 'val', 'Class Accuracy', epoch, acc)
+        plotter[0].plot("loss", "val", "Class Loss", epoch, test_loss / (batch_idx + 1))
+        plotter[0].plot("acc", "val", "Class Accuracy", epoch, acc)
 
     # Save checkpoint.
 
     if acc > best_acc:
-        print('Saving..')
+        print("Saving..")
         state = {
-            'net': net.state_dict(),
-            'optimizer' : optimizer.state_dict(),
-            'acc': acc,
-            'epoch': epoch,
+            "net": net.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "acc": acc,
+            "epoch": epoch,
         }
         if not os.path.isdir(dir_path):
             os.mkdir(dir_path)
-        torch.save(state, './' + dir_path + '/ckpt.pth')
+        torch.save(state, "./" + dir_path + "/ckpt.pth")
         # torch.onnx.export(net,
         #                   torch.empty(1, 3, 224, 224, dtype=torch.float32, device=device),
         #                   dir_path + '/output.onnx')
 
         best_acc = acc
 
-    with open(dir_path + '/log.txt', 'a') as f:
-        f.write('|Test| Loss: %.3f, Acc: %.3f \n' % (test_loss / (batch_idx + 1), acc))
+    with open(dir_path + "/log.txt", "a") as f:
+        f.write("|Test| Loss: %.3f, Acc: %.3f \n" % (test_loss / (batch_idx + 1), acc))
 
 
 # Model
-print('==> Building model..')
+print("==> Building model..")
 
 nets = {
     # 'resnet18_vanilla': ResDaulNet18_TP1(),
@@ -190,7 +224,7 @@ nets = {
     # 'resdualnet18_pw': ResDaulNet18_TP3(),
     # 'resdualnet18': ResDaulNet18_TP4(),
     # 'resdualnet18_swish_1': ResDaulNet18_TP5(),
-    'resdual5_imagenet': ResDaulNet18_TPI5(),
+    "resdual5_imagenet": ResDaulNet18_TPI5(),
     # 'rexnet18_0_relu_relu': RexNet18_T0(),
     # 'rexnet18_1_crelu': RexNet18_T1(),
 }
@@ -200,18 +234,18 @@ for netkey in nets.keys():
     # plotter = [VisdomLinePlotter(env_name='{} Training Plots'.format(netkey)),
     #            VisdomImagePlotter(env_name='{} Training Plots'.format(netkey))]
     plotter = None
-    log_path = 'outputs/' + netkey
+    log_path = "outputs/" + netkey
     net = nets[netkey]
     net = net.to(device)
 
     from torchinfo import summary
 
     os.makedirs(log_path, exist_ok=True)
-    with open(log_path + '/log.txt', 'w') as f:
-        f.write('Networks : %s\n' % netkey)
+    with open(log_path + "/log.txt", "w") as f:
+        f.write("Networks : %s\n" % netkey)
         summary(net, (1, 3, 224, 224), fd=f)
 
-    if device == 'cuda':
+    if device == "cuda":
         net = torch.nn.DataParallel(net)  # Not support ONNX converting
         # cudnn.benchmark = True
         pass
@@ -231,7 +265,9 @@ for netkey in nets.keys():
     optimizer = optim.Adam(net.parameters(), lr=0.0025)  ## Conf.2
     # optimizer = optim.Adam(net.parameters(), lr=0.001)  ## Conf.2
     # optimizer = optim.RMSprop(net.parameters(), lr=0.256, alpha=0.99, eps=1e-08, weight_decay=0.9, momentum=0.9, centered=False) # Conf.1
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=int(max_epoch * 1.0))
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=int(max_epoch * 1.0)
+    )
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 2, gamma=0.97, last_epoch=-1, verbose=True)
     # from lr_scheduler import CosineAnnealingWarmUpRestarts
     # scheduler = CosineAnnealingWarmUpRestarts(optimizer, T_0=50, T_mult=2, eta_max=0.1,  T_up=10, gamma=0.5)

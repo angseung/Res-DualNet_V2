@@ -25,16 +25,17 @@ np.random.seed(random_seed)
 #     'dataset' : 'ImageNet',
 #     'pth_path' : "./outputs/resdual5_imagenet/ckpt.pth",
 #     'input_size' : 224,
-#     'batch_size' : 256
+#     'batch_size' : 100
 # }
 
-config ={
-    'mode' : 'test',
-    'dataset' : 'CIFAR-10',
-    'pth_path' : "./outputs/resdual5_cifar-10/ckpt.pth",
-    'input_size' : 32,
-    'batch_size' : 100
+config = {
+    "mode": "test",
+    "dataset": "CIFAR-10",
+    "pth_path": "./outputs/resdual5_cifar-10/ckpt.pth",
+    "input_size": 32,
+    "batch_size": 100,
 }
+
 
 def test():
     # Model conversion to evaludation mode...
@@ -58,10 +59,16 @@ def test():
             progress_bar(
                 batch_idx,
                 len(dataloader),
-                'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
-                    test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+                "Loss: %.3f | Acc: %.3f%% (%d/%d)"
+                % (
+                    test_loss / (batch_idx + 1),
+                    100.0 * correct / total,
+                    correct,
+                    total,
+                ),
+            )
 
-    test_acc = 100. * correct / total
+    test_acc = 100.0 * correct / total
 
     return test_acc
 
@@ -70,9 +77,9 @@ def test():
 use_gpu = torch.cuda.is_available()  # use GPU
 
 if use_gpu:
-    device = torch.device("cuda:0")
+    device = torch.device("cuda")
 else:
-    raise NotImplementedError('CUDA Device needed to run this code...')
+    raise NotImplementedError("CUDA Device needed to run this code...")
 
 # ImageNet
 # net = ResDaulNet18_TPI5()
@@ -90,34 +97,31 @@ net = torch.nn.DataParallel(net)
 #  optimizer : optimizer.state_dict(),
 #  epoch : best performed epoch}
 
-pth_path = config['pth_path']
+pth_path = config["pth_path"]
 SAVEDAT = torch.load(pth_path)
 
-net.load_state_dict(SAVEDAT['net'])
-acc = SAVEDAT['acc']
-epoch = SAVEDAT['epoch']
+net.load_state_dict(SAVEDAT["net"])
+acc = SAVEDAT["acc"]
+epoch = SAVEDAT["epoch"]
 
 model_name = net.module.__class__.__name__
-print("%s model was loaded successfully... [best validation acc : %.3f at %03d epoch]"
-      %(model_name, acc, epoch))
+print(
+    "%s model was loaded successfully... [best validation acc : %.3f at %03d epoch]"
+    % (model_name, acc, epoch)
+)
 
 dataloader = data_loader(
-    mode=config['mode'],
-    dataset=config['dataset'],
-    input_size=config['input_size'],
-    batch_size=config['batch_size'],
-    shuffle_opt=True
+    mode=config["mode"],
+    dataset=config["dataset"],
+    input_size=config["input_size"],
+    batch_size=config["batch_size"],
+    shuffle_opt=True,
 )
 
-print("Loading %s dataset completed..." % config['mode'])
+print("Loading %s dataset completed..." % config["mode"])
 
 # Get model params and macs...
-modelinfo = summary(
-    net,
-    (1, 3, config['input_size'],
-     config['input_size']),
-    verbose=0
-)
+modelinfo = summary(net, (1, 3, config["input_size"], config["input_size"]), verbose=0)
 total_params = modelinfo.total_params
 total_macs = modelinfo.total_mult_adds
 
@@ -126,8 +130,12 @@ macs_bil = total_macs / (10 ** 9)
 
 criterion = nn.CrossEntropyLoss()
 test_acc = test()
-netscore = 20 * math.log10((test_acc ** 2) / (math.sqrt(param_mil) * math.sqrt(macs_bil)))
+netscore = 20 * math.log10(
+    (test_acc ** 2) / (math.sqrt(param_mil) * math.sqrt(macs_bil))
+)
 
 print("Test completed...")
-print("NetScore : %.3f, Params(M) : %.3f, Mac(G) : %.3f, Test Acc : %.3f"
-      %(netscore, param_mil, macs_bil, test_acc))
+print(
+    "NetScore : %.3f, Params(M) : %.3f, Mac(G) : %.3f, Test Acc : %.3f"
+    % (netscore, param_mil, macs_bil, test_acc)
+)
