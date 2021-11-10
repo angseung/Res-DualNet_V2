@@ -37,7 +37,7 @@ config = {
     "train_batch_size": 256,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": True,
-    "set_random_seed" : True
+    "set_random_seed": True,
 }
 
 if config["set_random_seed"]:
