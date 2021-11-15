@@ -2,6 +2,7 @@ import os
 import argparse
 import random
 import torch.optim as optim
+import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torchvision
 import torchvision.transforms as transforms
@@ -10,9 +11,6 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_checkpoint
-
-# from models import *
-import torch.nn as nn
 from models.resdualnet import ResDaulNetMnist
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
