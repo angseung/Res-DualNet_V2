@@ -10,8 +10,14 @@ import torch.onnx
 from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
+from tensorboardX import SummaryWriter
 from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_checkpoint
 from models.resdualnet import ResDaulNetMnist
+
+## for tensorboard run this command
+'''
+>>> tensorboard --logdir ./tensorboard
+'''
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 # parser.add_argument('--lr', default=0.00001, type=float, help='learning rate')
@@ -240,7 +246,7 @@ def test(epoch, dir_path=None, plotter=None) -> None:
     # Save checkpoint.
 
     if acc > best_acc:
-        print("Saving..")
+        print("\nSaving..")
         state = {
             "net": net.state_dict(),
             "optimizer": optimizer.state_dict(),

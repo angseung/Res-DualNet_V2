@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -110,7 +111,9 @@ class ResNetMnist(nn.Module):
         super(ResNetMnist, self).__init__()
         self.in_planes = 16
 
-        self.conv1 = nn.Conv2d(1, self.in_planes, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(
+            1, self.in_planes, kernel_size=3, stride=1, padding=1, bias=False
+        )
         self.bn1 = nn.BatchNorm2d(self.in_planes)
         self.layer1 = self._make_layer(block, self.in_planes, num_blocks[0], stride=1)
         self.linear = nn.Linear(self.in_planes * 49, num_classes)
