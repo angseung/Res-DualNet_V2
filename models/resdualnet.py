@@ -108,12 +108,12 @@ class BasicBlock(nn.Module):
 class ResNetMnist(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10):
         super(ResNetMnist, self).__init__()
-        self.in_planes = 64
+        self.in_planes = 16
 
-        self.conv1 = nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
-        self.linear = nn.Linear(64 * 49, num_classes)
+        self.conv1 = nn.Conv2d(1, self.in_planes, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(self.in_planes)
+        self.layer1 = self._make_layer(block, self.in_planes, num_blocks[0], stride=1)
+        self.linear = nn.Linear(self.in_planes * 49, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
