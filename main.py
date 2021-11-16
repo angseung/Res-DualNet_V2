@@ -11,6 +11,8 @@ from tqdm import tqdm
 import numpy as np
 from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_checkpoint
 from models import *
+from torchvision.models import shufflenet_v2_x1_0
+from torch.fft import rfftn
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 # parser.add_argument('--lr', default=0.00001, type=float, help='learning rate')
@@ -36,7 +38,7 @@ config = {
     "initial_lr": 0.0025,
     "train_batch_size": 256,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
-    "train_resume": True,
+    "train_resume": False,
     "set_random_seed": True,
 }
 

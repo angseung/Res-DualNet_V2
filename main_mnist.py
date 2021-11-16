@@ -15,9 +15,9 @@ from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_chec
 from models.resdualnet import ResDaulNetMnist
 
 ## for tensorboard run this command
-'''
+"""
 >>> tensorboard --logdir ./tensorboard
-'''
+"""
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 # parser.add_argument('--lr', default=0.00001, type=float, help='learning rate')
@@ -117,9 +117,9 @@ elif Dataset == "MNIST":
         [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
     )
     trainset = torchvision.datasets.MNIST(
-        "../data", train=True, download=True, transform=transform
+        "./data", train=True, download=True, transform=transform
     )
-    testset = torchvision.datasets.MNIST("../data", train=False, transform=transform)
+    testset = torchvision.datasets.MNIST("./data", train=False, transform=transform)
 
 trainloader = torch.utils.data.DataLoader(
     trainset,

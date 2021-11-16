@@ -109,7 +109,7 @@ class BasicBlock(nn.Module):
 class ResNetMnist(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10):
         super(ResNetMnist, self).__init__()
-        self.in_planes = 16
+        self.in_planes = 8
 
         self.conv1 = nn.Conv2d(
             1, self.in_planes, kernel_size=3, stride=1, padding=1, bias=False
@@ -136,4 +136,4 @@ class ResNetMnist(nn.Module):
 
 
 def ResDaulNetMnist():
-    return ResNetMnist(BasicBlock, [1])
+    return ResNetMnist(BasicBlock, [2])
