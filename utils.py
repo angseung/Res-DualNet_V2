@@ -331,7 +331,7 @@ def plot_filters_multi_channel(t):
     plt.show()
 
 
-def plot_filter_ch(img, title="", width=8):
+def plot_filter_ch(img, title="", width=8, fname=None, save_opt=False):
     (b, c, h, w) = img.shape
     if c <= 64:
         width = 8
@@ -344,14 +344,17 @@ def plot_filter_ch(img, title="", width=8):
 
     for i in range(c):
         plt.subplot(hor, width, i + 1)
-        plt.imshow(img[0, i, :, :])
+        plt.imshow(img[1, i, :, :])
         plt.axis("off")
 
     plt.suptitle(title)
     plt.show()
 
+    if save_opt:
+        fig.savefig("images/act_" + fname + ".png", dpi=300)
 
-def plot_hist(img, title):
+
+def plot_hist(img, title, fname=None, save_opt=False):
     img = img.flatten()
     std, mean = np.std(img), np.mean(img)
 
@@ -360,6 +363,9 @@ def plot_hist(img, title):
     plt.title("mean : %.4f std : %.4f, layer = %s" % (mean, std, title))
     plt.tight_layout()
     plt.show()
+
+    if save_opt:
+        fig.savefig("images/hist_" + fname + ".png", dpi=300)
 
 
 def data_loader(
