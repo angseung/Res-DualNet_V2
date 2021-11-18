@@ -13,6 +13,7 @@ from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_chec
 from models import *
 from torchvision.models import shufflenet_v2_x1_0
 from torch.fft import rfftn
+from models.shufflenetv2_32 import ShuffleNetV2
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 # parser.add_argument('--lr', default=0.00001, type=float, help='learning rate')
@@ -256,7 +257,8 @@ print("==> Building model..")
 
 nets = {
     # 'resdual5_imagenet': ResDaulNet18_TPI5(),
-    "resdual5_cifar-10": ResDaulNet18_TP5()
+    # "resdual5_cifar-10": ResDaulNet18_TP5(),
+    "dct_cifar-10": ShuffleNetV2(net_size=0.5),
 }
 
 for netkey in nets.keys():
