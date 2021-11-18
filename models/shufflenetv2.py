@@ -3,7 +3,7 @@ from torch import Tensor
 import torch.nn as nn
 from torch.fft import fft
 # from .utils import load_state_dict_from_url
-# from typing import Callable, Any, List
+from typing import Callable, Any, List
 
 
 __all__ = [
@@ -17,8 +17,6 @@ model_urls = {
     'shufflenetv2_x1.5': None,
     'shufflenetv2_x2.0': None,
 }
-def dct(x: Tensor = None, n: int = None, dim: int = None) -> Tensor:
-    return fft(x, n=n, dim=dim).real
 
 
 def channel_shuffle(x: Tensor, groups: int) -> Tensor:
@@ -35,6 +33,16 @@ def channel_shuffle(x: Tensor, groups: int) -> Tensor:
     x = x.view(batchsize, -1, height, width)
 
     return x
+
+
+class DCT(nn.Module):
+    def __init__(self, n: int = 0, dim: int = -1) -> None:
+        super(DCT, self).__init__()
+        self.n = n
+        self.dim = dim
+
+    def forward(self, input: Tensor) -> Tensor:
+        return fft(input, n=self.n, dim=self.dim).real
 
 
 class InvertedResidual(nn.Module):
@@ -64,17 +72,31 @@ class InvertedResidual(nn.Module):
         else:
             self.branch1 = nn.Sequential()
 
-        self.branch2 = nn.Sequential(
-            nn.Conv2d(inp if (self.stride > 1) else branch_features,
-                      branch_features, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(branch_features),
-            nn.ReLU(inplace=True),
-            self.depthwise_conv(branch_features, branch_features, kernel_size=3, stride=self.stride, padding=1),
-            nn.BatchNorm2d(branch_features),
-            nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(branch_features),
-            nn.ReLU(inplace=True),
-        )
+        if self.stride > 1:
+            self.branch2 = nn.Sequential(
+                nn.Conv2d(inp if (self.stride > 1) else branch_features,
+                          branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.BatchNorm2d(branch_features),
+                nn.ReLU(inplace=True),
+                self.depthwise_conv(branch_features, branch_features, kernel_size=3, stride=self.stride, padding=1),
+                nn.BatchNorm2d(branch_features),
+                nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.BatchNorm2d(branch_features),
+                nn.ReLU(inplace=True),
+            )
+        else: # DCT Block
+            self.branch2 = nn.Sequential(
+                nn.Conv2d(inp if (self.stride > 1) else branch_features,
+                          branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.BatchNorm2d(branch_features),
+                # nn.ReLU(inplace=True),
+                self.depthwise_conv(branch_features, branch_features, kernel_size=3, stride=self.stride, padding=1),
+                nn.BatchNorm2d(branch_features),
+                nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.BatchNorm2d(branch_features),
+                # nn.ReLU(inplace=True),
+            )
+
 
     @staticmethod
     def depthwise_conv(
@@ -232,3 +254,10 @@ def shufflenet_v2_x2_0(pretrained: bool = False, progress: bool = True, **kwargs
     """
     return _shufflenetv2('shufflenetv2_x2.0', pretrained, progress,
                          [4, 8, 4], [24, 244, 488, 976, 2048], **kwargs)
+
+
+if __name__ == "__main__":
+    model = shufflenet_v2_x1_0(num_classes=10)
+    k = DCT(n=50, dim=1)
+    # print(model)
+    aa = k(torch.rand((1, 10, 20, 30)))
