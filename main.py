@@ -149,6 +149,7 @@ def train(epoch, dir_path=None, plotter=None) -> None:
             outputs = net(inputs)
             loss = criterion(outputs, targets)
 
+
             loss.backward()
             optimizer.step()
 

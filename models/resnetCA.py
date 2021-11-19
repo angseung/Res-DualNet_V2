@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from torch.fft import fft
+from torch.fft import fft, ifft
 
 
 def swish(x):
@@ -23,6 +23,9 @@ class DCT(nn.Module):
 
     def forward(self, input: Tensor) -> Tensor:
         return fft(input, n=self.n, dim=self.dim).real
+
+    def backward(self, input: Tensor) -> Tensor:
+        return ifft(input, n=self.n, dim=self.dim).real
 
 
 class BasicBlock(nn.Module):
@@ -183,7 +186,8 @@ class DCTBlock(BasicBlock):
 
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
-        out = self.bn1_pw(self.dct(out))
+        out = self.dct(out)
+        out = self.bn1_pw(out)
         out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
 
         out += self.shortcut(x)
