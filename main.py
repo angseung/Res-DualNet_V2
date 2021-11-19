@@ -258,7 +258,8 @@ print("==> Building model..")
 nets = {
     # 'resdual5_imagenet': ResDaulNet18_TPI5(),
     # "resdual5_cifar-10": ResDaulNet18_TP5(),
-    "dct_cifar-10": ShuffleNetV2(net_size=0.5),
+    # "dct_cifar-10": ShuffleNetV2(net_size=0.5),
+    'dct_resdualnet' : ResDaulNet18_DCT(),
 }
 
 for netkey in nets.keys():

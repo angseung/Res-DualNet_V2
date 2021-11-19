@@ -7,10 +7,22 @@ Reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
+from torch.fft import fft
 
 
 def swish(x):
     return x * x.sigmoid()
+
+
+class DCT(nn.Module):
+    def __init__(self, n: int = 0, dim: int = -1) -> None:
+        super(DCT, self).__init__()
+        self.n = n
+        self.dim = dim
+
+    def forward(self, input: Tensor) -> Tensor:
+        return fft(input, n=self.n, dim=self.dim).real
 
 
 class BasicBlock(nn.Module):
@@ -46,6 +58,8 @@ class BasicBlock(nn.Module):
         self.conv1_p1 = nn.Conv2d(
             in_planes, planes, kernel_size=1, stride=1, padding=0, bias=False
         )
+
+        self.dct = DCT(n=planes, dim=1)
 
         self.bn1_dw1 = nn.BatchNorm2d(in_planes)
         self.bn1_dw2 = nn.BatchNorm2d(in_planes)
@@ -157,6 +171,19 @@ class BasicBlock4(BasicBlock):
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
         out = self.bn1_pw(self.conv1_p1(out))
+        out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
+
+        out += self.shortcut(x)
+        out = swish(out)
+        return out
+
+
+class DCTBlock(BasicBlock):
+    """ res-dualnet + w/o pw and use swish activation"""
+
+    def forward(self, x):
+        out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
+        out = self.bn1_pw(self.dct(out))
         out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
 
         out += self.shortcut(x)
@@ -339,6 +366,10 @@ def ResDaulNet18_TP4():
 
 def ResDaulNet18_TP5():
     return ResNet(BasicBlock4, [2, 2, 2, 2])
+
+
+def ResDaulNet18_DCT():
+    return ResNet(DCTBlock, [2, 2, 2, 2])
 
 
 def ResDaulNet18_TPI5():
