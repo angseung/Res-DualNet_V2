@@ -135,3 +135,5 @@ outputs
 *.pth
 images
 autograd_test.py
+*.png
+*.pptx

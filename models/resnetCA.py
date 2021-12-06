@@ -15,17 +15,32 @@ def swish(x):
     return x * x.sigmoid()
 
 
-class DCT(nn.Module):
-    def __init__(self, n: int = 0, dim: int = -1) -> None:
-        super(DCT, self).__init__()
-        self.n = n
-        self.dim = dim
+# class DCT(nn.Module):
+#     def __init__(self, n: int = 0, dim: int = -1) -> None:
+#         super(DCT, self).__init__()
+#         self.n = n
+#         self.dim = dim
+#
+#     def forward(self, input: Tensor) -> Tensor:
+#         return fft(input, n=self.n, dim=self.dim).real
+#
+#     def backward(self, input: Tensor) -> Tensor:
+#         return ifft(input, n=self.n, dim=self.dim).real
 
-    def forward(self, input: Tensor) -> Tensor:
-        return fft(input, n=self.n, dim=self.dim).real
 
-    def backward(self, input: Tensor) -> Tensor:
-        return ifft(input, n=self.n, dim=self.dim).real
+class DCT(torch.autograd.Function):
+    # def __init__(self, n: int = 0, dim: int = -1) -> None:
+    #     super(DCT, self).__init__()
+    #     self.n = n
+    #     self.dim = dim
+
+    @staticmethod
+    def forward(ctx, input: Tensor, n: int = 0, dim: int = 1) -> Tensor:
+        return fft(input, n=n, dim=dim).real
+
+    @staticmethod
+    def backward(ctx, input: Tensor, n: int = 0, dim: int = 1) -> Tensor:
+        return ifft(input, n=n, dim=dim).real
 
 
 class BasicBlock(nn.Module):
@@ -33,6 +48,9 @@ class BasicBlock(nn.Module):
 
     def __init__(self, in_planes, planes, stride=1):
         super(BasicBlock, self).__init__()
+        self.in_planes = in_planes
+        self.planes = planes
+
         # vanila resnet18 layer
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
@@ -62,7 +80,9 @@ class BasicBlock(nn.Module):
             in_planes, planes, kernel_size=1, stride=1, padding=0, bias=False
         )
 
-        self.dct = DCT(n=planes, dim=1)
+        # self.dct = DCT(n=planes, dim=1)
+        # self.dct = DCT()
+        self.dct = DCT.apply
 
         self.bn1_dw1 = nn.BatchNorm2d(in_planes)
         self.bn1_dw2 = nn.BatchNorm2d(in_planes)
@@ -186,7 +206,7 @@ class DCTBlock(BasicBlock):
 
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
-        out = self.dct(out)
+        out = self.dct(out, self.planes, 1)
         out = self.bn1_pw(out)
         out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
 
