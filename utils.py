@@ -332,6 +332,7 @@ def plot_filters_multi_channel(t):
 
 
 def plot_filter_ch(img, title="", width=8, fname=None, save_opt=False):
+    img = img.cpu().detach().numpy()
     (b, c, h, w) = img.shape
     if c <= 64:
         width = 8
@@ -344,7 +345,7 @@ def plot_filter_ch(img, title="", width=8, fname=None, save_opt=False):
 
     for i in range(c):
         plt.subplot(hor, width, i + 1)
-        plt.imshow(img[1, i, :, :])
+        plt.imshow(img[0, i, :, :])
         plt.axis("off")
 
     plt.suptitle(title)

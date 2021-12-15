@@ -14,6 +14,7 @@ from models import *
 from torchvision.models import shufflenet_v2_x1_0
 from torch.fft import rfftn
 from models.shufflenetv2_32 import ShuffleNetV2
+from models.resnet import ResNet18
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 # parser.add_argument('--lr', default=0.00001, type=float, help='learning rate')
@@ -257,9 +258,9 @@ print("==> Building model..")
 
 nets = {
     # 'resdual5_imagenet': ResDaulNet18_TPI5(),
-    # "resdual5_cifar-10": ResDaulNet18_TP5(),
-    # "dct_cifar-10": ShuffleNetV2(net_size=0.5),
-    "dct_resdualnet": ResDaulNet18_DCT(),
+    # "resdual5_cifar-10_paper": ResDaulNet18_TP5(),
+    "resnet18": ResNet18(),
+    # "dct_resdualnet": ResDaulNet18_DCT(),
 }
 
 for netkey in nets.keys():
