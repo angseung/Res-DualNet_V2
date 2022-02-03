@@ -12,7 +12,7 @@ from models.resnetCA import ResDaulNet18_TP5
 from models.resnet import ResNet18
 from utils import plot_filter_ch
 
-random_seed = 1
+random_seed = 12
 g = torch.Generator()
 g.manual_seed(random_seed)
 torch.manual_seed(random_seed)
@@ -71,3 +71,10 @@ plot_filter_ch(out_1, title="out_dw1", fname="dw1", save_opt=True)
 plot_filter_ch(out_2, title="out_dw2", fname="dw2", save_opt=True)
 
 plot_filter_ch(out_1 + out_2, title="out", fname="summ", save_opt=True)
+
+img_ori = np.squeeze(input.detach().cpu().numpy()).transpose((1, 2, 0))
+fig_ori = plt.figure()
+plt.imshow(img_ori)
+plt.axis("off")
+plt.show()
+fig_ori.savefig("orig.png", dpi=150)
