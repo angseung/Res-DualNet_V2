@@ -15,6 +15,7 @@ from torchvision.models import shufflenet_v2_x1_0
 from torch.fft import rfftn
 from models.shufflenetv2_32 import ShuffleNetV2
 from models.resnet import ResNet18
+from models.resdualnetV2 import ResDaulNet18_TP5
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 # parser.add_argument('--lr', default=0.00001, type=float, help='learning rate')
@@ -258,8 +259,8 @@ print("==> Building model..")
 
 nets = {
     # 'resdual5_imagenet': ResDaulNet18_TPI5(),
-    # "resdual5_cifar-10_paper": ResDaulNet18_TP5(),
-    "resnet18": ResNet18(),
+    "resdual5_cifar-10_paper": ResDaulNet18_TP5(),
+    # "resnet18": ResNet18(),
     # "dct_resdualnet": ResDaulNet18_DCT(),
 }
 
@@ -274,7 +275,8 @@ for netkey in nets.keys():
     if not config["train_resume"]:
         with open(log_path + "/log.txt", "w") as f:
             f.write("Networks : %s\n" % netkey)
-            m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
+            # m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
+            m_info = ""
             f.write("%s\n" % str(m_info))
     elif config["train_resume"]:
         with open(log_path + "/log.txt", "a") as f:

@@ -13,13 +13,28 @@ def swish(x: torch.Tensor = None) -> torch.Tensor:
     return x * x.sigmoid()
 
 
+def channel_shuffle(x: Tensor, groups: int) -> Tensor:
+    batchsize, num_channels, height, width = x.size()
+    channels_per_group = num_channels // groups
+
+    # reshape
+    x = x.view(batchsize, groups, channels_per_group, height, width)
+
+    x = torch.transpose(x, 1, 2).contiguous()
+
+    # flatten
+    x = x.view(batchsize, -1, height, width)
+
+    return x
+
+
 class DWHT(nn.Module):
     def __init__(self, in_planes: int = 64, planes: int = 128, groups: int = 8) -> Any:
         super(DWHT, self).__init__()
         self.n = int(math.log2(in_planes))
         self.N = in_planes
         self.M = planes
-        self.shuffle = nn.ChannelShuffle(groups)
+        self.groups = groups
 
     def forward(self, x: torch.Tensor = None) -> torch.Tensor:
         if x.shape[1] != self.N:
@@ -27,18 +42,18 @@ class DWHT(nn.Module):
 
         # pad zero along the channel axis
         if self.N < self.M:
-            x = F.pad(0, 0, 0, 0, 0, (self.M - self.N))
+            x = F.pad(x, (0, 0, 0, 0, 0, (self.M - self.N)), "constant", 0)
 
         for i in range(self.n):
             e = x[:, :: 2, :, :]
             o = x[:, 1 :: 2, :, :]
-            x[:, : (self.N // 2), :, :] = e + o
-            x[:, (self.N // 2) :, :, :] = e - o
+            x[:, : (self.M // 2), :, :] = e + o
+            x[:, (self.M // 2) :, :, :] = e - o
 
         if self.N > self.M:
             x = x[:, : self.M, :, :]
 
-        x = self.shuffle(x)
+        x = channel_shuffle(x, self.groups)
 
         return x
 
@@ -133,7 +148,10 @@ class BasicBlock(nn.Module):
         self.conv1_p1 = nn.Conv2d(
             in_planes, planes, kernel_size=1, stride=1, padding=0, bias=False
         )
-        self.dct = DCT.apply
+
+        self.dwht = DWHT(in_planes, planes, groups=8)
+
+        # self.dct = DCT.apply
 
         self.bn1_dw1 = nn.BatchNorm2d(in_planes)
         self.bn1_dw2 = nn.BatchNorm2d(in_planes)
@@ -190,11 +208,12 @@ class BasicBlock(nn.Module):
             )
 
     def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
+        out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
+        out = self.bn1_pw(self.dwht(out))
+        out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
 
         out += self.shortcut(x)
-        out = F.relu(out)
+        out = swish(out)
         return out
 
 
@@ -287,7 +306,7 @@ def ResDaulNet18_TP4():
 
 
 def ResDaulNet18_TP5():
-    return ResNet(CTPTBlock, [2, 2, 2, 2])
+    return ResNet(BasicBlock, [2, 2, 2, 2])
 
 
 def ResDaulNet18_DCT():
@@ -309,8 +328,9 @@ def RexNet18_T1():
 def test():
     net = ResDaulNet18_TP5()
     # summary(net, (1, 3, 224, 224))
-    # y = net(torch.randn(1, 3, 32, 32))
+    y = net(torch.randn(1, 3, 32, 32))
     # print(y.size())
 
 if __name__ == "__main__":
     net = ResDaulNet18_TP5()
+    y = net(torch.randn(1, 3, 32, 32))
