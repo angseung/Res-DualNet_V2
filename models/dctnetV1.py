@@ -57,6 +57,9 @@ class DWHT(nn.Module):
 
         return x
 
+    def backward(self, x: torch.Tensor = None) -> torch.Tensor:
+        pass
+
 
 class CTPTBlock(nn.Module):
     expansion = 1
@@ -210,7 +213,7 @@ class BasicBlock(nn.Module):
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
         out = self.bn1_pw(self.dwht(out))
-        out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
+        # out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
 
         out += self.shortcut(x)
         out = swish(out)
@@ -306,7 +309,7 @@ def ResDaulNet18_TP4():
 
 
 def ResDaulNet18_TP5():
-    return ResNet(BasicBlock, [2, 2, 2, 2])
+    return ResNet(BasicBlock, [1, 2, 1, 1])
 
 
 def ResDaulNet18_DCT():
@@ -330,6 +333,7 @@ def test():
     # summary(net, (1, 3, 224, 224))
     y = net(torch.randn(1, 3, 32, 32))
     # print(y.size())
+
 
 if __name__ == "__main__":
     net = ResDaulNet18_TP5()
