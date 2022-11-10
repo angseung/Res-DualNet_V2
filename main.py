@@ -19,7 +19,7 @@ from models.dctnetV1 import ResDaulNet18_TP5
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 # parser.add_argument('--lr', default=0.00001, type=float, help='learning rate')
-parser.add_argument("--lr", default=0.01, type=float, help="learning rate")
+parser.add_argument("--lr", default=0.001, type=float, help="learning rate")
 parser.add_argument(
     "--resume", "-r", action="store_true", help="resume from checkpoint"
 )
@@ -275,8 +275,8 @@ for netkey in nets.keys():
     if not config["train_resume"]:
         with open(log_path + "/log.txt", "w") as f:
             f.write("Networks : %s\n" % netkey)
-            # m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
-            m_info = ""
+            m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
+            # m_info = ""
             f.write("%s\n" % str(m_info))
     elif config["train_resume"]:
         with open(log_path + "/log.txt", "a") as f:
