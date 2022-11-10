@@ -88,10 +88,10 @@ if Dataset == "ImageNet":
         ]
     )
     trainset = torchvision.datasets.ImageNet(
-        root="C:/imagenet/", split="train", transform=transform_train
+        root="./imagenet/", split="train", transform=transform_train
     )
     testset = torchvision.datasets.ImageNet(
-        root="C:/imagenet/", split="val", transform=transform_test
+        root="./imagenet/", split="val", transform=transform_test
     )
 
 elif Dataset == "CIFAR-10":
@@ -103,10 +103,10 @@ elif Dataset == "CIFAR-10":
 
     transform_test = transforms.Compose([transforms.ToTensor(), normalize])
     trainset = torchvision.datasets.CIFAR10(
-        root="C:/cifar-10/", train=True, download=True, transform=transform_train
+        root="./cifar-10/", train=True, download=True, transform=transform_train
     )
     testset = torchvision.datasets.CIFAR10(
-        root="C:/cifar-10/", train=False, download=True, transform=transform_test
+        root="./cifar-10/", train=False, download=True, transform=transform_test
     )
 
 trainloader = torch.utils.data.DataLoader(

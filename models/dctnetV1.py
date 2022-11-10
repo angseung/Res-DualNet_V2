@@ -47,8 +47,8 @@ class DWHT(nn.Module):
         for i in range(self.n):
             e = x[:, :: 2, :, :]
             o = x[:, 1 :: 2, :, :]
-            x[:, : (self.M // 2), :, :] = e + o
-            x[:, (self.M // 2) :, :, :] = e - o
+            x[:, : (self.N // 2), :, :] = e + o
+            x[:, (self.N // 2) :, :, :] = e - o
 
         if self.N > self.M:
             x = x[:, : self.M, :, :]
@@ -57,8 +57,9 @@ class DWHT(nn.Module):
 
         return x
 
-    def backward(self, x: torch.Tensor = None) -> torch.Tensor:
-        pass
+    # def backward(self, x: torch.Tensor = None) -> torch.Tensor:
+    #     pass
+    # raise NotImplemented()
 
 
 class CTPTBlock(nn.Module):
