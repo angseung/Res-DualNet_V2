@@ -47,8 +47,8 @@ class DWHT(nn.Module):
         for i in range(self.n):
             e = x[:, :: 2, :, :]
             o = x[:, 1 :: 2, :, :]
-            x[:, : (self.N // 2), :, :] = e + o
-            x[:, (self.N // 2) :, :, :] = e - o
+            x[:, : (self.M // 2), :, :] = e + o
+            x[:, (self.M // 2) :, :, :] = e - o
 
         if self.N > self.M:
             x = x[:, : self.M, :, :]
