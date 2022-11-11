@@ -1,6 +1,7 @@
 import os
 import argparse
 import random
+import json
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 import torchvision
@@ -43,6 +44,7 @@ config = {
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
+    "l2_reg" : 0.005,
 }
 
 if config["set_random_seed"]:
@@ -275,9 +277,10 @@ for netkey in nets.keys():
     if not config["train_resume"]:
         with open(log_path + "/log.txt", "w") as f:
             f.write("Networks : %s\n" % netkey)
+            f.write("Net Train Configs: \n %s\n" % json.dumps(config))
             m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
-            # m_info = ""
             f.write("%s\n" % str(m_info))
+
     elif config["train_resume"]:
         with open(log_path + "/log.txt", "a") as f:
             f.write("Train resumed from this point...\n")
@@ -287,11 +290,10 @@ for netkey in nets.keys():
         # cudnn.benchmark = True
 
     criterion = nn.CrossEntropyLoss()
-    l2 = 0.01
     optimizer = optim.Adam(
         net.parameters(), 
-        lr=config["initial_lr"], 
-        weight_decay=l2
+        lr=config["initial_lr"],
+        weight_decay=config["l2_reg"]
         )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, 

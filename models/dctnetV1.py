@@ -314,7 +314,7 @@ def ResDaulNet18_TP5():
 
 
 def ResDaulNetV2():
-    return ResNet(BasicBlock, [1, 1, 1, 1])
+    return ResNet(BasicBlock, [1, 2, 1, 1])
 
 
 def ResDaulNet18_TPI5():
