@@ -28,30 +28,43 @@ SAVEDAT = torch.load(path)
 
 model = ResDaulNet18_TP5()
 model = nn.DataParallel(model)
-model.load_state_dict(SAVEDAT['net'])
+model.load_state_dict(SAVEDAT["net"])
 model.eval()
 
 resnet = ResNet18()
 path = "outputs/resnet18/ckpt.pth"
 
-normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
-                                     std=[0.2023, 0.1994, 0.2010])
+normalize = transforms.Normalize(
+    mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
+)
 
-transform_train = transforms.Compose([
-    transforms.ToTensor(),
-    # normalize,
-])
+transform_train = transforms.Compose(
+    [
+        transforms.ToTensor(),
+        # normalize,
+    ]
+)
 
-transform_test = transforms.Compose([
-    transforms.ToTensor(),
-    # normalize,
-])
+transform_test = transforms.Compose(
+    [
+        transforms.ToTensor(),
+        # normalize,
+    ]
+)
 
-trainset = torchvision.datasets.CIFAR10(root='C:/cifar-10', train=False, download=True, transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=0)
+trainset = torchvision.datasets.CIFAR10(
+    root="C:/cifar-10", train=False, download=True, transform=transform_train
+)
+trainloader = torch.utils.data.DataLoader(
+    trainset, batch_size=64, shuffle=True, num_workers=0
+)
 
-testset = torchvision.datasets.CIFAR10(root='C:/cifar-10', train=False, download=True, transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=0)
+testset = torchvision.datasets.CIFAR10(
+    root="C:/cifar-10", train=False, download=True, transform=transform_test
+)
+testloader = torch.utils.data.DataLoader(
+    testset, batch_size=100, shuffle=False, num_workers=0
+)
 
 for image, label in trainloader:
     break

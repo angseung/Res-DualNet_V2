@@ -120,13 +120,13 @@ modelinfo = summary(net, (1, 3, config["input_size"], config["input_size"]), ver
 total_params = modelinfo.total_params
 total_macs = modelinfo.total_mult_adds
 
-param_mil = total_params / (10 ** 6)
-macs_bil = total_macs / (10 ** 9)
+param_mil = total_params / (10**6)
+macs_bil = total_macs / (10**9)
 
 criterion = nn.CrossEntropyLoss()
 test_acc = test()
 netscore = 20 * math.log10(
-    (test_acc ** 2) / (math.sqrt(param_mil) * math.sqrt(macs_bil))
+    (test_acc**2) / (math.sqrt(param_mil) * math.sqrt(macs_bil))
 )
 
 print("Test completed...")

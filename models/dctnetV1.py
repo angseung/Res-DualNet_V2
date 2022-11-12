@@ -45,8 +45,8 @@ class DWHT(nn.Module):
             x = F.pad(x, (0, 0, 0, 0, 0, (self.M - self.N)), "constant", 0)
 
         for i in range(self.n):
-            e = x[:, :: 2, :, :]
-            o = x[:, 1 :: 2, :, :]
+            e = x[:, ::2, :, :]
+            o = x[:, 1::2, :, :]
             x[:, : (self.M // 2), :, :] = e + o
             x[:, (self.M // 2) :, :, :] = e - o
 

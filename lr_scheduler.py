@@ -65,7 +65,7 @@ class CosineAnnealingWarmUpRestarts(_LRScheduler):
                         )
                     )
                     self.cycle = n
-                    self.T_cur = epoch - self.T_0 * (self.T_mult ** n - 1) / (
+                    self.T_cur = epoch - self.T_0 * (self.T_mult**n - 1) / (
                         self.T_mult - 1
                     )
                     self.T_i = self.T_0 * self.T_mult ** (n)
@@ -73,7 +73,7 @@ class CosineAnnealingWarmUpRestarts(_LRScheduler):
                 self.T_i = self.T_0
                 self.T_cur = epoch
 
-        self.eta_max = self.base_eta_max * (self.gamma ** self.cycle)
+        self.eta_max = self.base_eta_max * (self.gamma**self.cycle)
         self.last_epoch = math.floor(epoch)
         for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
             param_group["lr"] = lr

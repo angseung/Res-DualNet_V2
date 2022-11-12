@@ -1,4 +1,5 @@
 import os
+import platform
 import argparse
 import random
 import json
@@ -28,12 +29,19 @@ args = parser.parse_args()
 
 
 def seed_worker(worker_id: None) -> None:
-    worker_seed = torch.initial_seed() % 2 ** 32
+    worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+curr_os = platform.system()
+print("Current OS : %s" % curr_os)
+
+if "Windows" in curr_os:
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+elif "Darwin" in curr_os:
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
@@ -44,7 +52,7 @@ config = {
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
-    "l2_reg" : 0.005,
+    "l2_reg": 0.005,
 }
 
 if config["set_random_seed"]:
@@ -270,7 +278,6 @@ for netkey in nets.keys():
     plotter = None
     log_path = "outputs/" + netkey
     net = nets[netkey]
-    net = net.to(device)
 
     os.makedirs(log_path, exist_ok=True)
 
@@ -291,14 +298,10 @@ for netkey in nets.keys():
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(
-        net.parameters(), 
-        lr=config["initial_lr"],
-        weight_decay=config["l2_reg"]
-        )
+        net.parameters(), lr=config["initial_lr"], weight_decay=config["l2_reg"]
+    )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, 
-        T_max=int(max_epoch * 1.0
-        )
+        optimizer, T_max=int(max_epoch * 1.0)
     )
 
     if config["train_resume"]:
@@ -313,6 +316,7 @@ for netkey in nets.keys():
         start_epoch = checkpoint["epoch"] + 1
 
     for epoch in range(start_epoch, max_epoch):
+        net = net.to(device)
         train(epoch, netkey, plotter)
         test(epoch, netkey, plotter)
         scheduler.step()

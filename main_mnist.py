@@ -29,7 +29,7 @@ args = parser.parse_args()
 
 
 def seed_worker(worker_id: None) -> None:
-    worker_seed = torch.initial_seed() % 2 ** 32
+    worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 

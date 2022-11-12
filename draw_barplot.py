@@ -13,7 +13,9 @@ labels = ["", "", ""]
 fig = plt.figure(figsize=(20, 8))
 plt.subplot(141)
 plt.bar(x_axis[0], num_params[0], align="center", color="r", label="ResNet18")
-plt.bar(x_axis[1], num_params[1], align="center", color="g", label="ResNet18 with DSConv")
+plt.bar(
+    x_axis[1], num_params[1], align="center", color="g", label="ResNet18 with DSConv"
+)
 plt.bar(x_axis[2], num_params[2], align="center", color="b", label="Res-DualNet (ours)")
 plt.axhline(num_params[1], linestyle="--", color="k")
 plt.axhline(num_params[2], linestyle="--", color="k")
@@ -26,8 +28,16 @@ plt.title("Total Network Parameters (M)", fontsize="xx-large")
 
 plt.subplot(142)
 plt.bar(x_axis[0], mac_operations[0], align="center", color="r", label="ResNet18")
-plt.bar(x_axis[1], mac_operations[1], align="center", color="g", label="ResNet18 with DSConv")
-plt.bar(x_axis[2], mac_operations[2], align="center", color="b", label="Res-DualNet (ours)")
+plt.bar(
+    x_axis[1],
+    mac_operations[1],
+    align="center",
+    color="g",
+    label="ResNet18 with DSConv",
+)
+plt.bar(
+    x_axis[2], mac_operations[2], align="center", color="b", label="Res-DualNet (ours)"
+)
 plt.axhline(mac_operations[1], linestyle="--", color="k")
 plt.axhline(mac_operations[2], linestyle="--", color="k")
 plt.xticks(x_axis, labels, rotation=0)

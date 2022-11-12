@@ -148,7 +148,7 @@ class BasicBlock(nn.Module):
 
 
 class BasicBlock1(BasicBlock):
-    """ resnet 18 --> mobilenet style"""
+    """resnet 18 --> mobilenet style"""
 
     def forward(self, x):
         out = F.relu(self.bn1_dw1(self.conv1_d1(x)))
@@ -162,7 +162,7 @@ class BasicBlock1(BasicBlock):
 
 
 class BasicBlock2(BasicBlock):
-    """ res-dualnet + pw"""
+    """res-dualnet + pw"""
 
     def forward(self, x):
         out = self.bn1_dw1(F.relu(self.conv1_d1(x) * 0.5 + self.conv1_d2(x) * 0.5))
@@ -176,7 +176,7 @@ class BasicBlock2(BasicBlock):
 
 
 class BasicBlock3(BasicBlock):
-    """ res-dualnet + w/o pw"""
+    """res-dualnet + w/o pw"""
 
     def forward(self, x):
         out = self.bn1_dw1(F.relu(self.conv1_d1(x) * 0.5 + self.conv1_d2(x) * 0.5))
@@ -189,7 +189,7 @@ class BasicBlock3(BasicBlock):
 
 
 class BasicBlock4(BasicBlock):
-    """ res-dualnet + w/o pw and use swish activation"""
+    """res-dualnet + w/o pw and use swish activation"""
 
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
@@ -202,7 +202,7 @@ class BasicBlock4(BasicBlock):
 
 
 class DCTBlock(BasicBlock):
-    """ res-dualnet + w/o pw and use swish activation"""
+    """res-dualnet + w/o pw and use swish activation"""
 
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
@@ -216,7 +216,7 @@ class DCTBlock(BasicBlock):
 
 
 class BasicBlock5(BasicBlock):
-    """ res-dualnet + w/o pw and use swish activation"""
+    """res-dualnet + w/o pw and use swish activation"""
 
     def forward(self, x):
         out1 = self.conv1_d1(x)
@@ -235,7 +235,7 @@ class BasicBlock5(BasicBlock):
 
 
 class BasicBlockX0(BasicBlock):
-    """ rexnet remove last activation"""
+    """rexnet remove last activation"""
 
     def forward(self, x):
         out1 = self.conv1_d1(x)
@@ -255,7 +255,7 @@ class BasicBlockX0(BasicBlock):
 
 
 class BasicBlockX1(BasicBlock):
-    """ rexnet remove last activation + dw bn"""
+    """rexnet remove last activation + dw bn"""
 
     def forward(self, x):
         out1 = self.conv1_d1(x)
@@ -282,7 +282,7 @@ class BasicBlockX1(BasicBlock):
 
 
 class BasicBlockX2(BasicBlock):
-    """ rexnet remove last activation + dw bn"""
+    """rexnet remove last activation + dw bn"""
 
     def forward(self, x):
         out1 = self.conv1_d1(x) * 0.5
