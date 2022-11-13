@@ -29,12 +29,13 @@ def channel_shuffle(x: Tensor, groups: int) -> Tensor:
 
 
 class DWHT(nn.Module):
-    def __init__(self, in_planes: int = 64, planes: int = 128, groups: int = 8) -> Any:
+    def __init__(self, in_planes: int = 64, planes: int = 128, groups: int = 8, shuffle: bool = True) -> Any:
         super(DWHT, self).__init__()
         self.n = int(math.log2(in_planes))
         self.N = in_planes
         self.M = planes
         self.groups = groups
+        self.shuffle = shuffle
 
     def forward(self, x: torch.Tensor = None) -> torch.Tensor:
         if x.shape[1] != self.N:
@@ -53,7 +54,8 @@ class DWHT(nn.Module):
         if self.N > self.M:
             x = x[:, : self.M, :, :]
 
-        x = channel_shuffle(x, self.groups)
+        if self.shuffle:
+            x = channel_shuffle(x, self.groups)
 
         return x
 
@@ -153,7 +155,7 @@ class BasicBlock(nn.Module):
             in_planes, planes, kernel_size=1, stride=1, padding=0, bias=False
         )
 
-        self.dwht = DWHT(in_planes, planes, groups=8)
+        self.dwht = DWHT(in_planes, planes, groups=8, shuffle=False)
 
         # self.dct = DCT.apply
 

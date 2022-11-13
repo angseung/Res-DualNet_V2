@@ -269,7 +269,7 @@ print("==> Building model..")
 
 nets = {
     # 'resdual5_imagenet': ResDaulNet18_TPI5(),
-    "resdual5_cifar-10_paper": ResDaulNetV2(),
+    "resdualnet_v2": ResDaulNetV2(),
     # "resnet18": ResNet18(),
     # "dct_resdualnet": ResDaulNet18_DCT(),
 }
