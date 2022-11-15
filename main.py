@@ -10,17 +10,10 @@ import torchvision.transforms as transforms
 import torch.onnx
 from torchinfo import summary
 from tqdm import tqdm
-import numpy as np
-from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_checkpoint
 from models import *
-from torchvision.models import shufflenet_v2_x1_0
-from torch.fft import rfftn
-from models.shufflenetv2_32 import ShuffleNetV2
-from models.resnet import ResNet18
 from models.dctnetV1 import ResDaulNet18_TP5, ResDaulNetV2
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
-# parser.add_argument('--lr', default=0.00001, type=float, help='learning rate')
 parser.add_argument("--lr", default=0.001, type=float, help="learning rate")
 parser.add_argument(
     "--resume", "-r", action="store_true", help="resume from checkpoint"
@@ -38,9 +31,11 @@ curr_os = platform.system()
 print("Current OS : %s" % curr_os)
 
 if "Windows" in curr_os:
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 elif "Darwin" in curr_os:
     device = "mps" if torch.backends.mps.is_available() else "cpu"
+elif "Linux" in curr_os:
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
@@ -145,7 +140,7 @@ classes = (
 )
 
 # Training
-def train(epoch, dir_path=None, plotter=None) -> None:
+def train(epoch, dir_path=None) -> None:
     print("\nEpoch: %d" % epoch)
     net.train()
     train_loss = 0
@@ -172,29 +167,6 @@ def train(epoch, dir_path=None, plotter=None) -> None:
             tepoch.set_postfix(
                 loss=train_loss / (batch_idx + 1), accuracy=100.0 * correct / total
             )
-            if plotter is not None:
-                plotter[0].plot(
-                    "batch_loss",
-                    "train_epoch%d" % epoch,
-                    "Batch Loss",
-                    batch_idx,
-                    train_loss / (batch_idx + 1),
-                )
-                plotter[0].plot(
-                    "batch_acc",
-                    "train_epoch%d" % epoch,
-                    "Batch Acc",
-                    batch_idx,
-                    100.0 * correct / total,
-                )
-
-    if plotter is not None:
-        plotter[0].plot(
-            "loss", "train", "Class Loss", epoch, train_loss / (batch_idx + 1)
-        )
-        plotter[0].plot(
-            "acc", "train", "Class Accuracy", epoch, 100.0 * correct / total
-        )
 
     with open("outputs/" + dir_path + "/log.txt", "a") as f:
         f.write(
@@ -202,10 +174,8 @@ def train(epoch, dir_path=None, plotter=None) -> None:
             % (epoch, train_loss / (batch_idx + 1), 100.0 * correct / total)
         )
 
-    return (epoch, train_loss / (batch_idx + 1), 100.0 * correct / total)
 
-
-def test(epoch, dir_path=None, plotter=None) -> None:
+def test(epoch, dir_path=None) -> None:
     global best_acc
     net.eval()
     test_loss = 0
@@ -236,13 +206,7 @@ def test(epoch, dir_path=None, plotter=None) -> None:
                 )
     acc = 100.0 * correct / total
 
-    # visualization
-    if plotter is not None:
-        plotter[0].plot("loss", "val", "Class Loss", epoch, test_loss / (batch_idx + 1))
-        plotter[0].plot("acc", "val", "Class Accuracy", epoch, acc)
-
     # Save checkpoint.
-
     if acc > best_acc:
         print("Saving..")
         state = {
@@ -261,8 +225,6 @@ def test(epoch, dir_path=None, plotter=None) -> None:
     with open(dir_path + "/log.txt", "a") as f:
         f.write("|Test| Loss: %.3f, Acc: %.3f \n" % (test_loss / (batch_idx + 1), acc))
 
-    return (epoch, test_loss, acc)
-
 
 # Model
 print("==> Building model..")
@@ -275,7 +237,6 @@ nets = {
 }
 
 for netkey in nets.keys():
-    plotter = None
     log_path = "outputs/" + netkey
     net = nets[netkey]
 
@@ -307,7 +268,6 @@ for netkey in nets.keys():
     if config["train_resume"]:
         # Load checkpoint.
         print("==> Resuming from checkpoint..")
-        # assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
         checkpoint = torch.load(log_path + "/ckpt.pth")
         net.load_state_dict(checkpoint["net"])
         scheduler.load_state_dict(checkpoint["scheduler"])
@@ -317,6 +277,6 @@ for netkey in nets.keys():
 
     for epoch in range(start_epoch, max_epoch):
         net = net.to(device)
-        train(epoch, netkey, plotter)
-        test(epoch, netkey, plotter)
+        train(epoch, netkey)
+        test(epoch, netkey)
         scheduler.step()
