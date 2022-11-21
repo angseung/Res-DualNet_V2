@@ -6,11 +6,12 @@ import json
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 import torchvision
+import torch.nn as nn
 import torchvision.transforms as transforms
 import torch.onnx
 from torchinfo import summary
 from tqdm import tqdm
-from models import *
+import numpy as np
 from models.dctnetV1 import ResDaulNet18_TP5, ResDaulNetV2
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
