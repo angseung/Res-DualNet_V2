@@ -2,6 +2,7 @@ import os
 import platform
 import argparse
 import random
+import datetime
 import json
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
@@ -12,7 +13,7 @@ import torch.onnx
 from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
-from models.dctnetV1 import ResDaulNet18_TP5, ResDaulNetV2
+from models.dctnetV1 import ResDaulNetV2Auto
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 parser.add_argument("--lr", default=0.001, type=float, help="learning rate")
@@ -231,13 +232,17 @@ def test(epoch, dir_path=None) -> None:
 print("==> Building model..")
 
 nets = {
-    # 'resdual5_imagenet': ResDaulNet18_TPI5(),
-    "resdualnet_v2": ResDaulNetV2(),
-    # "resnet18": ResNet18(),
-    # "dct_resdualnet": ResDaulNet18_DCT(),
+    "resdualnet_v2_0": ResDaulNetV2Auto([1, 2, 1, 2]),
+    "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 1, 1]),
+    "resdualnet_v2_2": ResDaulNetV2Auto([1, 1, 2, 2]),
+    "resdualnet_v2_3": ResDaulNetV2Auto([2, 1, 2, 1]),
+    "resdualnet_v2_4": ResDaulNetV2Auto([2, 2, 2, 2]),
+    "resdualnet_v2_5": ResDaulNetV2Auto([1, 1, 1, 1]),
 }
 
 for netkey in nets.keys():
+    now = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+
     log_path = "outputs/" + netkey
     net = nets[netkey]
 

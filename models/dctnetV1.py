@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 import math
 import torch
 import torch.nn as nn
@@ -316,7 +316,11 @@ def ResDaulNet18_TP5():
 
 
 def ResDaulNetV2():
-    return ResNet(BasicBlock, [1, 2, 1, 1])
+    return ResNet(BasicBlock, [2, 2, 1, 1])
+
+
+def ResDaulNetV2Auto(block_config: List[int]):
+    return ResNet(BasicBlock, block_config)
 
 
 def ResDaulNet18_TPI5():
