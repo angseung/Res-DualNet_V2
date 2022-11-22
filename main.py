@@ -4,12 +4,13 @@ import argparse
 import random
 import datetime
 import json
+import torch
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 import torchvision
 import torch.nn as nn
 import torchvision.transforms as transforms
-import torch.onnx
+# from ignite.handlers.param_scheduler import create_lr_scheduler_with_warmup
 from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
@@ -43,7 +44,7 @@ best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 config = {
-    "max_epoch": 20,
+    "max_epoch": 50,
     "initial_lr": 0.001,
     "train_batch_size": 64,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
@@ -232,11 +233,11 @@ def test(epoch, dir_path=None) -> None:
 print("==> Building model..")
 
 nets = {
-    "resdualnet_v2_0": ResDaulNetV2Auto([1, 2, 1, 2]),
-    "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 1, 1]),
-    "resdualnet_v2_2": ResDaulNetV2Auto([1, 1, 2, 2]),
-    "resdualnet_v2_3": ResDaulNetV2Auto([2, 1, 2, 1]),
-    "resdualnet_v2_4": ResDaulNetV2Auto([2, 2, 2, 2]),
+    # "resdualnet_v2_0": ResDaulNetV2Auto([1, 2, 1, 2]),
+    # "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 1, 1]),
+    # "resdualnet_v2_2": ResDaulNetV2Auto([1, 1, 2, 2]),
+    # "resdualnet_v2_3": ResDaulNetV2Auto([2, 1, 2, 1]),
+    # "resdualnet_v2_4": ResDaulNetV2Auto([2, 2, 2, 2]),
     "resdualnet_v2_5": ResDaulNetV2Auto([1, 1, 1, 1]),
 }
 
@@ -270,6 +271,12 @@ for netkey in nets.keys():
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=int(max_epoch * 1.0)
     )
+    # scheduler = create_lr_scheduler_with_warmup(
+    #     torch_lr_scheduler,
+    #     warmup_start_value=0.0,
+    #     warmup_end_value=config["initial_lr"],
+    #     warmup_duration=3,
+    # )
 
     if config["train_resume"]:
         # Load checkpoint.
