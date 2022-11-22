@@ -168,6 +168,7 @@ class BasicBlock(nn.Module):
             planes, planes, kernel_size=3, stride=1, padding=1, bias=False
         )
         self.bn2 = nn.BatchNorm2d(planes)
+        self.dropout = nn.Dropout(0.1)
 
         # resdual18 layer - 2
         self.conv2_d1 = nn.Conv2d(
@@ -215,6 +216,7 @@ class BasicBlock(nn.Module):
 
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
+        out = self.dropout(out)
         out = self.bn1_pw(self.dwht(out))
         # out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
 

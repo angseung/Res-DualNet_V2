@@ -13,7 +13,7 @@ import torch.onnx
 from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
-from models.dctnetV1 import ResDaulNetV2Auto
+import timm
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 parser.add_argument("--lr", default=0.001, type=float, help="learning rate")
@@ -102,13 +102,28 @@ if Dataset == "ImageNet":
     )
 
 elif Dataset == "CIFAR-10":
-    input_size = 32
+    input_size = 224
     normalize = transforms.Normalize(
         mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
     )
-    transform_train = transforms.Compose([transforms.ToTensor(), normalize])
+    transform_train = transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ]
+    )
 
-    transform_test = transforms.Compose([transforms.ToTensor(), normalize])
+    transform_test = transforms.Compose(
+        [
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ]
+    )
     trainset = torchvision.datasets.CIFAR10(
         root="./cifar-10/", train=True, download=True, transform=transform_train
     )
@@ -232,12 +247,11 @@ def test(epoch, dir_path=None) -> None:
 print("==> Building model..")
 
 nets = {
-    "resdualnet_v2_0": ResDaulNetV2Auto([1, 2, 1, 2]),
-    "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 1, 1]),
-    "resdualnet_v2_2": ResDaulNetV2Auto([1, 1, 2, 2]),
-    "resdualnet_v2_3": ResDaulNetV2Auto([2, 1, 2, 1]),
-    "resdualnet_v2_4": ResDaulNetV2Auto([2, 2, 2, 2]),
-    "resdualnet_v2_5": ResDaulNetV2Auto([1, 1, 1, 1]),
+    "vit_model" : timm.create_model(
+        'vit_base_patch16_224',
+        pretrained=True,
+        num_classes=10
+    )
 }
 
 for netkey in nets.keys():
