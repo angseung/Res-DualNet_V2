@@ -121,10 +121,11 @@ class CTPTBlock(nn.Module):
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, in_planes, planes, stride=1):
+    def __init__(self, in_planes, planes, stride=1, dropout_rate:float = None):
         super(BasicBlock, self).__init__()
         self.in_planes = in_planes
         self.planes = planes
+        self.dropout_rate = dropout_rate
 
         # vanila resnet18 layer
         self.conv1 = nn.Conv2d(
@@ -168,7 +169,9 @@ class BasicBlock(nn.Module):
             planes, planes, kernel_size=3, stride=1, padding=1, bias=False
         )
         self.bn2 = nn.BatchNorm2d(planes)
-        self.dropout = nn.Dropout(0.7)
+
+        if self.dropout_rate is not None:
+            self.dropout = nn.Dropout(self.dropout_rate)
 
         # resdual18 layer - 2
         self.conv2_d1 = nn.Conv2d(
@@ -216,7 +219,9 @@ class BasicBlock(nn.Module):
 
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
-        out = self.dropout(out)
+        if self.dropout_rate is not None:
+            out = self.dropout(out)
+
         out = self.bn1_pw(self.dwht(out))
         out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
 
@@ -226,23 +231,24 @@ class BasicBlock(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
+    def __init__(self, block, num_blocks, num_classes=10, dropout_rate: List[float] = [None, None, None, None]):
         super(ResNet, self).__init__()
         self.in_planes = 64
+        self.dropout_rate = dropout_rate
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
-        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1, dropout_rate=self.dropout_rate[0])
+        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2, dropout_rate=self.dropout_rate[1])
+        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2, dropout_rate=self.dropout_rate[2])
+        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2, dropout_rate=self.dropout_rate[3])
         self.linear = nn.Linear(512 * block.expansion, num_classes)
 
-    def _make_layer(self, block, planes, num_blocks, stride):
+    def _make_layer(self, block, planes, num_blocks, stride, dropout_rate):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride))
+            layers.append(block(self.in_planes, planes, stride, dropout_rate))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
@@ -321,8 +327,8 @@ def ResDaulNetV2():
     return ResNet(BasicBlock, [2, 2, 1, 1])
 
 
-def ResDaulNetV2Auto(block_config: List[int]):
-    return ResNet(BasicBlock, block_config)
+def ResDaulNetV2Auto(block_config: List[int], dropout_rate: float = None):
+    return ResNet(BasicBlock, block_config, dropout_rate=dropout_rate)
 
 
 def ResDaulNet18_TPI5():

@@ -44,13 +44,13 @@ best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 config = {
-    "max_epoch": 50,
+    "max_epoch": 200,
     "initial_lr": 0.001,
     "train_batch_size": 64,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
-    "l2_reg": 0.0005,
+    "l2_reg": 0.001,
 }
 
 if config["set_random_seed"]:
@@ -233,12 +233,12 @@ def test(epoch, dir_path=None) -> None:
 print("==> Building model..")
 
 nets = {
-    # "resdualnet_v2_0": ResDaulNetV2Auto([1, 2, 1, 2]),
-    # "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 1, 1]),
-    # "resdualnet_v2_2": ResDaulNetV2Auto([1, 1, 2, 2]),
-    # "resdualnet_v2_3": ResDaulNetV2Auto([2, 1, 2, 1]),
-    # "resdualnet_v2_4": ResDaulNetV2Auto([2, 2, 2, 2]),
-    "resdualnet_v2_5": ResDaulNetV2Auto([1, 1, 1, 1]),
+    "resdualnet_v2_0": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
+    "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, 0.9, None, None]),
+    "resdualnet_v2_2": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, 0.9, 0.9, None]),
+    "resdualnet_v2_3": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, 0.9, 0.9, 0.9]),
+    # "resdualnet_v2_4": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
+    # "resdualnet_v2_5": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
 }
 
 for netkey in nets.keys():
@@ -252,6 +252,7 @@ for netkey in nets.keys():
     if not config["train_resume"]:
         with open(log_path + "/log.txt", "w") as f:
             f.write("Networks : %s\n" % netkey)
+            config["dropout_rate"] = net.dropout_rate
             f.write("Net Train Configs: \n %s\n" % json.dumps(config))
             m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
             f.write("%s\n" % str(m_info))
