@@ -10,11 +10,11 @@ import torch.backends.cudnn as cudnn
 import torchvision
 import torch.nn as nn
 import torchvision.transforms as transforms
-# from ignite.handlers.param_scheduler import create_lr_scheduler_with_warmup
 from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from models.dctnetV1 import ResDaulNetV2Auto
+from warmup_scheduler import GradualWarmupScheduler
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 parser.add_argument("--lr", default=0.001, type=float, help="learning rate")
@@ -269,15 +269,14 @@ for netkey in nets.keys():
     optimizer = optim.Adam(
         net.parameters(), lr=config["initial_lr"], weight_decay=config["l2_reg"]
     )
+    # this zero gradient update is needed to avoid a warning message
+    optimizer.zero_grad()
+    optimizer.step()
+
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=int(max_epoch * 1.0)
     )
-    # scheduler = create_lr_scheduler_with_warmup(
-    #     torch_lr_scheduler,
-    #     warmup_start_value=0.0,
-    #     warmup_end_value=config["initial_lr"],
-    #     warmup_duration=3,
-    # )
+    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=5, after_scheduler=scheduler)
 
     if config["train_resume"]:
         # Load checkpoint.
@@ -293,4 +292,5 @@ for netkey in nets.keys():
         net = net.to(device)
         train(epoch, netkey)
         test(epoch, netkey)
+        scheduler_warmup.step(epoch)
         scheduler.step()
