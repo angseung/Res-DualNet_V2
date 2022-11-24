@@ -16,13 +16,6 @@ import numpy as np
 from models.resdualnetv2 import ResDaulNetV2Auto
 from warmup_scheduler import GradualWarmupScheduler, CosineAnnealingWarmUpRestarts
 
-parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
-parser.add_argument("--lr", default=0.001, type=float, help="learning rate")
-parser.add_argument(
-    "--resume", "-r", action="store_true", help="resume from checkpoint"
-)
-args = parser.parse_args()
-
 
 def seed_worker(worker_id: None) -> None:
     worker_seed = torch.initial_seed() % 2**32
@@ -44,14 +37,15 @@ best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 config = {
-    "max_epoch": 100,
+    "max_epoch": 200,
     "initial_lr": 0.001,
     "train_batch_size": 64,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
     "l2_reg": 0.0005,
-    "scheduling": "warm_and_restart" # ["normal", "warm", "warm_and_restart"]
+    "dropout_rate": [0.3, 0.3, 0.3, 0.3],
+    "scheduling": "warm",  # ["normal", "warm", "warm_and_restart"]
 }
 
 if config["set_random_seed"]:
@@ -109,7 +103,6 @@ elif Dataset == "CIFAR-10":
         mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
     )
     transform_train = transforms.Compose([transforms.ToTensor(), normalize])
-
     transform_test = transforms.Compose([transforms.ToTensor(), normalize])
     trainset = torchvision.datasets.CIFAR10(
         root="./cifar-10/", train=True, download=True, transform=transform_train
@@ -130,19 +123,6 @@ testloader = torch.utils.data.DataLoader(
     testset, batch_size=100, shuffle=False, num_workers=0
 )
 
-classes = (
-    "plane",
-    "car",
-    "bird",
-    "cat",
-    "deer",
-    "dog",
-    "frog",
-    "horse",
-    "ship",
-    "truck",
-)
-
 # Training
 def train(epoch, dir_path=None) -> None:
     print("\nEpoch: %d" % epoch)
@@ -150,6 +130,7 @@ def train(epoch, dir_path=None) -> None:
     train_loss = 0
     correct = 0
     total = 0
+
     with tqdm(trainloader, unit="batch") as tepoch:
         for batch_idx, (inputs, targets) in enumerate(tepoch):
             tepoch.set_description(f"Train Epoch {epoch}")
@@ -185,11 +166,6 @@ def test(epoch, dir_path=None) -> None:
     test_loss = 0
     correct = 0
     total = 0
-
-    # if dir_path is None:
-    #     dir_path = "outputs/checkpoint"
-    # else:
-    #     dir_path = "outputs/" + dir_path
 
     with torch.no_grad():
         with tqdm(testloader, unit="batch") as tepoch:
@@ -234,17 +210,28 @@ def test(epoch, dir_path=None) -> None:
 print("==> Building model..")
 
 nets = {
-    # "resdualnet_v2_0": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
-    # "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.2, 0.2, None, None]),
-    # "resdualnet_v2_2": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.2, 0.2, 0.2, None]),
-    "resdualnet_v2_3": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.3, 0.3, 0.3, 0.3]),
-    # "resdualnet_v2_4": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
-    # "resdualnet_v2_5": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
+    "resdualnet_v2_0": ResDaulNetV2Auto(
+        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
+    ),
+    "resdualnet_v2_1": ResDaulNetV2Auto(
+        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
+    ),
+    "resdualnet_v2_2": ResDaulNetV2Auto(
+        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
+    ),
+    "resdualnet_v2_3": ResDaulNetV2Auto(
+        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
+    ),
+    "resdualnet_v2_4": ResDaulNetV2Auto(
+        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
+    ),
+    "resdualnet_v2_5": ResDaulNetV2Auto(
+        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
+    ),
 }
 
 for netkey in nets.keys():
     now = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-
 
     log_path = f"outputs/{netkey}_{now}"
     net = nets[netkey]
@@ -253,7 +240,7 @@ for netkey in nets.keys():
 
     if not config["train_resume"]:
         with open(log_path + "/log.txt", "w") as f:
-            f.write("Networks : %s\n" % netkey)
+            f.write(f"Networks : {netkey}_{now}\n")
             config["dropout_rate"] = net.dropout_rate
             f.write("Net Train Configs: \n %s\n" % json.dumps(config))
             m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
@@ -272,17 +259,23 @@ for netkey in nets.keys():
 
     if config["scheduling"] in ["warm", "warm_and_restart"]:
         optimizer = optim.Adam(
-            net.parameters(), lr=1e-8, weight_decay=config["l2_reg"], # for warm-up
+            net.parameters(),
+            lr=1e-8,
+            weight_decay=config["l2_reg"],  # for warm-up
         )
     elif config["scheduling"] == "normal":
         optimizer = optim.Adam(
-            net.parameters(), lr=config["initial_lr"], weight_decay=config["l2_reg"], # for non-warm-up
+            net.parameters(),
+            lr=config["initial_lr"],
+            weight_decay=config["l2_reg"],  # for non-warm-up
         )
 
     # For Original CosAnnealing...
     if config["scheduling"] == "normal":
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=int(max_epoch * 1.0), verbose=1,
+            optimizer,
+            T_max=int(max_epoch * 1.0),
+            verbose=1,
         )
 
     # For Warm...
