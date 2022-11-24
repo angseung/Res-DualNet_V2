@@ -14,7 +14,7 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from models.dctnetV1 import ResDaulNetV2Auto
-from warmup_scheduler import GradualWarmupScheduler
+from warmup_scheduler import GradualWarmupScheduler, CosineAnnealingWarmUpRestarts
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 parser.add_argument("--lr", default=0.001, type=float, help="learning rate")
@@ -44,13 +44,14 @@ best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 config = {
-    "max_epoch": 200,
+    "max_epoch": 100,
     "initial_lr": 0.001,
     "train_batch_size": 64,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
-    "l2_reg": 0.001,
+    "l2_reg": 0.0005,
+    "scheduling": "warm_and_restart" # ["normal", "warm", "warm_and_restart"]
 }
 
 if config["set_random_seed"]:
@@ -233,10 +234,10 @@ def test(epoch, dir_path=None) -> None:
 print("==> Building model..")
 
 nets = {
-    "resdualnet_v2_0": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
-    "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, 0.9, None, None]),
-    "resdualnet_v2_2": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, 0.9, 0.9, None]),
-    "resdualnet_v2_3": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, 0.9, 0.9, 0.9]),
+    # "resdualnet_v2_0": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
+    # "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.2, 0.2, None, None]),
+    # "resdualnet_v2_2": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.2, 0.2, 0.2, None]),
+    "resdualnet_v2_3": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.5, 0.5, 0.5, 0.5]),
     # "resdualnet_v2_4": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
     # "resdualnet_v2_5": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
 }
@@ -266,17 +267,40 @@ for netkey in nets.keys():
         # cudnn.benchmark = True
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(
-        net.parameters(), lr=config["initial_lr"], weight_decay=config["l2_reg"]
-    )
-    # this zero gradient update is needed to avoid a warning message
-    optimizer.zero_grad()
-    optimizer.step()
 
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=int(max_epoch * 1.0)
-    )
-    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=5, after_scheduler=scheduler)
+    if config["scheduling"] in ["warm", "warm_and_restart"]:
+        optimizer = optim.Adam(
+            net.parameters(), lr=1e-8, weight_decay=config["l2_reg"], # for warm-up
+        )
+    elif config["scheduling"] == "normal":
+        optimizer = optim.Adam(
+            net.parameters(), lr=config["initial_lr"], weight_decay=config["l2_reg"], # for non-warm-up
+        )
+
+    # For Original CosAnnealing...
+    if config["scheduling"] == "normal":
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=int(max_epoch * 1.0), verbose=1,
+        )
+
+    # For Warm...
+    elif config["scheduling"] == "warm":
+        scheduler = CosineAnnealingWarmUpRestarts(
+            optimizer=optimizer,
+            T_0=config["max_epoch"],
+            T_up=5,
+            eta_max=config["initial_lr"],
+        )
+
+    # For Warm and Restart...
+    elif config["scheduling"] == "warm_and_restart":
+        scheduler = CosineAnnealingWarmUpRestarts(
+            optimizer=optimizer,
+            T_0=config["max_epoch"] // 4,
+            T_up=5,
+            eta_max=config["initial_lr"],
+            gamma=0.5,
+        )
 
     if config["train_resume"]:
         # Load checkpoint.
@@ -292,5 +316,4 @@ for netkey in nets.keys():
         net = net.to(device)
         train(epoch, netkey)
         test(epoch, netkey)
-        scheduler_warmup.step(epoch)
         scheduler.step()
