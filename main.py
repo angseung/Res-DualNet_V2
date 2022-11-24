@@ -13,7 +13,7 @@ import torchvision.transforms as transforms
 from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
-from models.dctnetV1 import ResDaulNetV2Auto
+from models.resdualnetv2 import ResDaulNetV2Auto
 from warmup_scheduler import GradualWarmupScheduler, CosineAnnealingWarmUpRestarts
 
 parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
@@ -172,7 +172,7 @@ def train(epoch, dir_path=None) -> None:
                 loss=train_loss / (batch_idx + 1), accuracy=100.0 * correct / total
             )
 
-    with open("outputs/" + dir_path + "/log.txt", "a") as f:
+    with open(dir_path + "/log.txt", "a") as f:
         f.write(
             "Epoch [%d] |Train| Loss: %.3f, Acc: %.3f \t"
             % (epoch, train_loss / (batch_idx + 1), 100.0 * correct / total)
@@ -186,10 +186,10 @@ def test(epoch, dir_path=None) -> None:
     correct = 0
     total = 0
 
-    if dir_path is None:
-        dir_path = "outputs/checkpoint"
-    else:
-        dir_path = "outputs/" + dir_path
+    # if dir_path is None:
+    #     dir_path = "outputs/checkpoint"
+    # else:
+    #     dir_path = "outputs/" + dir_path
 
     with torch.no_grad():
         with tqdm(testloader, unit="batch") as tepoch:
@@ -237,7 +237,7 @@ nets = {
     # "resdualnet_v2_0": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
     # "resdualnet_v2_1": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.2, 0.2, None, None]),
     # "resdualnet_v2_2": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.2, 0.2, 0.2, None]),
-    "resdualnet_v2_3": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.5, 0.5, 0.5, 0.5]),
+    "resdualnet_v2_3": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.3, 0.3, 0.3, 0.3]),
     # "resdualnet_v2_4": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
     # "resdualnet_v2_5": ResDaulNetV2Auto([2, 2, 2, 2], dropout_rate=[0.9, None, None, None]),
 }
@@ -245,7 +245,8 @@ nets = {
 for netkey in nets.keys():
     now = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
 
-    log_path = "outputs/" + netkey
+
+    log_path = f"outputs/{netkey}_{now}"
     net = nets[netkey]
 
     os.makedirs(log_path, exist_ok=True)
@@ -262,7 +263,8 @@ for netkey in nets.keys():
         with open(log_path + "/log.txt", "a") as f:
             f.write("Train resumed from this point...\n")
 
-    if device == "cuda":
+    # for multiple gpus...
+    if device == "cuda" and torch.cuda.device_count() > 1:
         net = torch.nn.DataParallel(net)  # Not support ONNX converting
         # cudnn.benchmark = True
 
@@ -314,6 +316,6 @@ for netkey in nets.keys():
 
     for epoch in range(start_epoch, max_epoch):
         net = net.to(device)
-        train(epoch, netkey)
-        test(epoch, netkey)
+        train(epoch, log_path)
+        test(epoch, log_path)
         scheduler.step()
