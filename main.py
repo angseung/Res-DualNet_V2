@@ -125,7 +125,7 @@ testloader = torch.utils.data.DataLoader(
 
 # Training
 def train(epoch, dir_path=None) -> None:
-    print("\nEpoch: %d" % epoch)
+    print(f"\nEpoch: {epoch}, curr_lr: {scheduler.get_lr()}")
     net.train()
     train_loss = 0
     correct = 0
@@ -155,7 +155,7 @@ def train(epoch, dir_path=None) -> None:
 
     with open(dir_path + "/log.txt", "a") as f:
         f.write(
-            "Epoch [%d] |Train| Loss: %.3f, Acc: %.3f \t"
+            "Epoch [%03d] |Train| Loss: %.3f, Acc: %.3f \t"
             % (epoch, train_loss / (batch_idx + 1), 100.0 * correct / total)
         )
 
@@ -210,22 +210,7 @@ def test(epoch, dir_path=None) -> None:
 print("==> Building model..")
 
 nets = {
-    "resdualnet_v2_0": ResDaulNetV2Auto(
-        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
-    ),
-    "resdualnet_v2_1": ResDaulNetV2Auto(
-        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
-    ),
-    "resdualnet_v2_2": ResDaulNetV2Auto(
-        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
-    ),
-    "resdualnet_v2_3": ResDaulNetV2Auto(
-        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
-    ),
-    "resdualnet_v2_4": ResDaulNetV2Auto(
-        [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
-    ),
-    "resdualnet_v2_5": ResDaulNetV2Auto(
+    "resdualnet_v2": ResDaulNetV2Auto(
         [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
     ),
 }

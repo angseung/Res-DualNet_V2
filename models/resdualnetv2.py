@@ -35,7 +35,7 @@ class DWHT(nn.Module):
         planes: int = 128,
         groups: int = 8,
         shuffle: bool = True,
-    ) -> None:
+    ) -> nn.Module:
         super(DWHT, self).__init__()
         self.n = int(math.log2(in_planes))
         self.N = in_planes
@@ -69,7 +69,7 @@ class DWHT(nn.Module):
 class CTPTBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, in_planes: int = 64, planes: int = 128, stride: int = 1) -> None:
+    def __init__(self, in_planes: int = 64, planes: int = 128, stride: int = 1) -> nn.Module:
         super(CTPTBlock, self).__init__()
         self.in_planes = in_planes
         self.planes = planes
@@ -124,8 +124,8 @@ class DWHTBlock(nn.Module):
     expansion = 1
 
     def __init__(
-        self, in_planes: int, planes: int, stride: int = 1, dropout_rate: float = None
-    ) -> None:
+        self, in_planes: int, planes: int, stride: int = 1, dropout_rate: float = 0.2
+    ) -> nn.Module:
         super(DWHTBlock, self).__init__()
         self.in_planes = in_planes
         self.planes = planes
@@ -228,7 +228,7 @@ class ResDualNet(nn.Module):
         num_blocks: List[int],
         num_classes: int = 10,
         dropout_rate: List[Union[float, None]] = [None, None, None, None],
-    ):
+    ) -> nn.Module:
         super(ResDualNet, self).__init__()
         self.in_planes = 64
         self.dropout_rate = dropout_rate
@@ -270,10 +270,10 @@ class ResDualNet(nn.Module):
 
 
 def ResDaulNetV2():
-    return ResDualNet(DWHTBlock, [2, 2, 1, 1])
+    return ResDualNet(DWHTBlock, [2, 2, 2, 2])
 
 
 def ResDaulNetV2Auto(
-    block_config: List[int], dropout_rate: List[Union[float, None]] = None
+    block_config: List[int], dropout_rate: List[Union[float, None]]
 ):
     return ResDualNet(DWHTBlock, block_config, dropout_rate=dropout_rate)
