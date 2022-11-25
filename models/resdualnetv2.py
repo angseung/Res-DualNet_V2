@@ -4,6 +4,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from dropblock import DropBlock2D
 
 
 def swish(x: torch.Tensor = None) -> torch.Tensor:
@@ -69,7 +70,9 @@ class DWHT(nn.Module):
 class CTPTBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, in_planes: int = 64, planes: int = 128, stride: int = 1) -> nn.Module:
+    def __init__(
+        self, in_planes: int = 64, planes: int = 128, stride: int = 1
+    ) -> nn.Module:
         super(CTPTBlock, self).__init__()
         self.in_planes = in_planes
         self.planes = planes
@@ -221,6 +224,107 @@ class DWHTBlock(nn.Module):
         return out
 
 
+class DWHTBlockRev(nn.Module):
+    expansion = 1
+
+    def __init__(
+        self, in_planes: int, planes: int, stride: int = 1, drop_prob: float = 0.9
+    ) -> nn.Module:
+        super(DWHTBlockRev, self).__init__()
+        self.in_planes = in_planes
+        self.planes = planes
+        self.drop_prob = drop_prob
+
+        if drop_prob < 0.8:
+            warnings.warn(f"Dropout rate is too low, got {drop_prob}", UserWarning)
+
+        self.conv1 = nn.Conv2d(
+            in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
+        )
+        self.bn1 = nn.BatchNorm2d(planes)
+
+        self.conv1_d1 = nn.Conv2d(
+            in_planes,
+            in_planes,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            groups=in_planes,
+            bias=False,
+        )
+        self.conv1_d2 = nn.Conv2d(
+            in_planes,
+            in_planes,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            groups=in_planes,
+            bias=False,
+        )
+
+        self.dwht = DWHT(in_planes, planes, groups=8, shuffle=False)
+
+        self.bn1_dw1 = nn.BatchNorm2d(in_planes)
+        self.bn1_dwht = nn.BatchNorm2d(planes)
+
+        self.conv2 = nn.Conv2d(
+            planes, planes, kernel_size=3, stride=1, padding=1, bias=False
+        )
+        self.bn2 = nn.BatchNorm2d(planes)
+
+        if self.drop_prob is not None:
+            self.dropout = DropBlock2D(block_size=7, drop_prob=self.drop_prob)
+
+        self.conv2_d1 = nn.Conv2d(
+            planes,
+            planes,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            groups=planes,
+            bias=False,
+        )
+
+        self.conv2_d2 = nn.Conv2d(
+            planes,
+            planes,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            groups=planes,
+            bias=False,
+        )
+
+        self.bn2_dw1 = nn.BatchNorm2d(planes)
+
+        self.shortcut = nn.Sequential()
+
+        if stride != 1 or in_planes != self.expansion * planes:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(
+                    in_planes,
+                    self.expansion * planes,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
+                nn.BatchNorm2d(self.expansion * planes),
+            )
+
+    def forward(self, x):
+        out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
+        if self.drop_prob is not None:
+            out = self.dropout(out)
+
+        out = self.bn1_dwht(self.dwht(out))
+        out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
+
+        out += self.shortcut(x)
+        out = swish(out)
+
+        return out
+
+
 class ResDualNet(nn.Module):
     def __init__(
         self,
@@ -273,7 +377,9 @@ def ResDaulNetV2():
     return ResDualNet(DWHTBlock, [2, 2, 2, 2])
 
 
-def ResDaulNetV2Auto(
-    block_config: List[int], dropout_rate: List[Union[float, None]]
-):
+def ResDaulNetV2Auto(block_config: List[int], dropout_rate: List[Union[float, None]]):
     return ResDualNet(DWHTBlock, block_config, dropout_rate=dropout_rate)
+
+
+def ResDaulNetV2RevAuto(block_config: List[int], dropout_rate: List[Union[float, None]]):
+    return ResDualNet(DWHTBlockRev, block_config, dropout_rate=dropout_rate)
