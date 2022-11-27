@@ -13,7 +13,7 @@ import torchvision.transforms as transforms
 from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
-from models.resdualnetv2 import ResDaulNetV2Auto, ResDaulNetV2RevAuto
+from models.resdualnetv2 import ResDaulNetV2Auto, ResDaulNetV2RevAuto, ResDaulNetV2Rev2Auto
 from warmup_scheduler import GradualWarmupScheduler, CosineAnnealingWarmUpRestarts
 
 
@@ -43,7 +43,7 @@ config = {
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
-    "l2_reg": 0.001,
+    "l2_reg": 0.0025,
     "dropout_rate": [0.3, 0.3, 0.3, 0.3],
     "scheduling": "warm",  # ["normal", "warm", "warm_and_restart"]
 }

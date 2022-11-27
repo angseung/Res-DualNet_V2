@@ -228,9 +228,111 @@ class DWHTBlockRev(nn.Module):
     expansion = 1
 
     def __init__(
-        self, in_planes: int, planes: int, stride: int = 1, drop_prob: float = 0.9
+        self, in_planes: int, planes: int, stride: int = 1, dropout_rate: float = 0.2
     ) -> nn.Module:
         super(DWHTBlockRev, self).__init__()
+        self.in_planes = in_planes
+        self.planes = planes
+        self.dropout_rate = dropout_rate
+
+        if dropout_rate > 0.5:
+            warnings.warn(f"Dropout rate is too high, got {dropout_rate}", UserWarning)
+
+        self.conv1 = nn.Conv2d(
+            in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
+        )
+        self.bn1 = nn.BatchNorm2d(planes)
+
+        self.conv1_d1 = nn.Conv2d(
+            in_planes,
+            in_planes,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            groups=in_planes,
+            bias=False,
+        )
+        self.conv1_d2 = nn.Conv2d(
+            in_planes,
+            in_planes,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            groups=in_planes,
+            bias=False,
+        )
+
+        self.dwht = DWHT(in_planes, planes, groups=8, shuffle=False)
+
+        self.bn1_dw1 = nn.BatchNorm2d(in_planes)
+        self.bn1_dwht = nn.BatchNorm2d(planes)
+
+        self.conv2 = nn.Conv2d(
+            planes, planes, kernel_size=3, stride=1, padding=1, bias=False
+        )
+        self.bn2 = nn.BatchNorm2d(planes)
+
+        if self.dropout_rate is not None:
+            self.dropout = nn.Dropout(self.dropout_rate)
+
+        self.conv2_d1 = nn.Conv2d(
+            planes,
+            planes,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            groups=planes,
+            bias=False,
+        )
+
+        self.conv2_d2 = nn.Conv2d(
+            planes,
+            planes,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            groups=planes,
+            bias=False,
+        )
+
+        self.bn2_dw1 = nn.BatchNorm2d(planes)
+
+        self.shortcut = nn.Sequential()
+
+        if stride != 1 or in_planes != self.expansion * planes:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(
+                    in_planes,
+                    self.expansion * planes,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
+                nn.BatchNorm2d(self.expansion * planes),
+            )
+
+    def forward(self, x):
+        out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
+        if self.dropout_rate is not None:
+            out = self.dropout(out)
+
+        out = self.bn1_dwht(self.dwht(out))
+        out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
+
+        out += self.shortcut(x)
+        out = swish(out)
+
+        return out
+
+
+## Applied DropBlock2D in Skip Connection
+class DWHTBlockRev2(nn.Module):
+    expansion = 1
+
+    def __init__(
+        self, in_planes: int, planes: int, stride: int = 1, drop_prob: float = 0.9
+    ) -> nn.Module:
+        super(DWHTBlockRev2, self).__init__()
         self.in_planes = in_planes
         self.planes = planes
         self.drop_prob = drop_prob
@@ -272,9 +374,6 @@ class DWHTBlockRev(nn.Module):
         )
         self.bn2 = nn.BatchNorm2d(planes)
 
-        if self.drop_prob is not None:
-            self.dropout = DropBlock2D(block_size=7, drop_prob=self.drop_prob)
-
         self.conv2_d1 = nn.Conv2d(
             planes,
             planes,
@@ -311,11 +410,12 @@ class DWHTBlockRev(nn.Module):
                 nn.BatchNorm2d(self.expansion * planes),
             )
 
+            if self.drop_prob is not None:
+                self.dropout = DropBlock2D(block_size=7, drop_prob=self.drop_prob)
+                self.shortcut.add_module("drop_block_0", self.dropout)
+
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
-        if self.drop_prob is not None:
-            out = self.dropout(out)
-
         out = self.bn1_dwht(self.dwht(out))
         out = self.bn2_dw1(swish(self.conv2_d1(out) + self.conv2_d2(out)) * 0.5)
 

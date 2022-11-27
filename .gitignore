@@ -138,3 +138,4 @@ autograd_test.py
 *.png
 *.pptx
 cifar-10
+imagenet
