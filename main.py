@@ -4,6 +4,7 @@ import argparse
 import random
 import datetime
 import json
+from typing import Tuple, Union, List
 import torch
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
@@ -13,6 +14,7 @@ import torchvision.transforms as transforms
 from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
 from models.resdualnetv2 import ResDaulNetV2Auto, ResDaulNetV2RevAuto, ResDaulNetV2Rev2Auto, ResDaulNetV2
 from warmup_scheduler import GradualWarmupScheduler, CosineAnnealingWarmUpRestarts
 
@@ -43,7 +45,7 @@ config = {
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
-    "l2_reg": 0.0,
+    "l2_reg": 0.0005,
     "dropout_rate": [0.3, 0.3, 0.3, 0.3],
     "scheduling": "warm",  # ["normal", "warm", "warm_and_restart"]
     "augment" : False,
@@ -141,7 +143,7 @@ testloader = torch.utils.data.DataLoader(
 )
 
 # Training
-def train(epoch, dir_path=None) -> None:
+def train(epoch, dir_path=None) -> Tuple[float, float]:
     print(f"\nEpoch: {epoch}, curr_lr: {scheduler.get_lr()}")
     net.train()
     train_loss = 0
@@ -176,8 +178,10 @@ def train(epoch, dir_path=None) -> None:
             % (epoch, train_loss / (batch_idx + 1), 100.0 * correct / total)
         )
 
+    return train_loss / (batch_idx + 1), 100.0 * correct / total
 
-def test(epoch, dir_path=None) -> None:
+
+def test(epoch, dir_path=None) -> Tuple[float, float]:
     global best_acc
     net.eval()
     test_loss = 0
@@ -222,6 +226,8 @@ def test(epoch, dir_path=None) -> None:
     with open(dir_path + "/log.txt", "a") as f:
         f.write("|Test| Loss: %.3f, Acc: %.3f \n" % (test_loss / (batch_idx + 1), acc))
 
+    return (test_loss / (batch_idx + 1)), acc
+
 
 # Model
 print("==> Building model..")
@@ -238,6 +244,7 @@ for netkey in nets.keys():
 
     log_path = f"outputs/{netkey}_{now}"
     net = nets[netkey]
+    writer = SummaryWriter(log_path)
 
     os.makedirs(log_path, exist_ok=True)
 
@@ -312,6 +319,16 @@ for netkey in nets.keys():
 
     for epoch in range(start_epoch, max_epoch):
         net = net.to(device)
-        train(epoch, log_path)
-        test(epoch, log_path)
+        train_loss, train_acc = train(epoch, log_path)
+        test_loss, test_acc = test(epoch, log_path)
+
+        ## write to tensorboard
+        writer.add_scalar('Loss/train', train_loss, epoch)
+        writer.add_scalar('Loss/test', test_loss, epoch)
+        writer.add_scalar('Accuracy/train', train_acc, epoch)
+        writer.add_scalar('Accuracy/test', test_acc, epoch)
+        writer.add_scalar('Learning rate', scheduler.get_lr()[0], epoch)
+
         scheduler.step()
+
+    writer.close()
