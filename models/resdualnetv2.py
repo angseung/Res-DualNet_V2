@@ -67,6 +67,21 @@ class DWHT(nn.Module):
         return x
 
 
+class DCT(nn.Module):
+    def __init__(self, in_plains) -> nn.Module:
+        super(DCT, self).__init__()
+        self.in_planes = in_plains
+
+        # generate DCT weight list
+        self.dct_weights = torch.tensor(
+            [math.cos((math.pi / self.in_planes) * (0.5 + n) * n)
+            for n in range(self.in_planes)]
+        )
+
+    def forward(self, data: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError
+
+
 class CTPTBlock(nn.Module):
     expansion = 1
 
@@ -134,8 +149,9 @@ class DWHTBlock(nn.Module):
         self.planes = planes
         self.dropout_rate = dropout_rate
 
-        if dropout_rate > 0.5:
-            warnings.warn(f"Dropout rate is too high, got {dropout_rate}", UserWarning)
+        if dropout_rate is not None:
+            if dropout_rate > 0.5:
+                warnings.warn(f"Dropout rate is too high, got {dropout_rate}", UserWarning)
 
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
@@ -235,8 +251,9 @@ class DWHTBlockRev(nn.Module):
         self.planes = planes
         self.dropout_rate = dropout_rate
 
-        if dropout_rate > 0.5:
-            warnings.warn(f"Dropout rate is too high, got {dropout_rate}", UserWarning)
+        if dropout_rate is not None:
+            if dropout_rate > 0.5:
+                warnings.warn(f"Dropout rate is too high, got {dropout_rate}", UserWarning)
 
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
@@ -337,8 +354,9 @@ class DWHTBlockRev2(nn.Module):
         self.planes = planes
         self.drop_prob = drop_prob
 
-        if drop_prob < 0.8:
-            warnings.warn(f"Dropout rate is too low, got {drop_prob}", UserWarning)
+        if drop_prob is not None:
+            if drop_prob < 0.8:
+                warnings.warn(f"Dropout rate is too low, got {drop_prob}", UserWarning)
 
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
@@ -483,3 +501,6 @@ def ResDaulNetV2Auto(block_config: List[int], dropout_rate: List[Union[float, No
 
 def ResDaulNetV2RevAuto(block_config: List[int], dropout_rate: List[Union[float, None]]):
     return ResDualNet(DWHTBlockRev, block_config, dropout_rate=dropout_rate)
+
+def ResDaulNetV2Rev2Auto(block_config: List[int], dropout_rate: List[Union[float, None]]):
+    return ResDualNet(DWHTBlockRev2, block_config, dropout_rate=dropout_rate)

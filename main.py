@@ -13,7 +13,7 @@ import torchvision.transforms as transforms
 from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
-from models.resdualnetv2 import ResDaulNetV2Auto, ResDaulNetV2RevAuto, ResDaulNetV2Rev2Auto
+from models.resdualnetv2 import ResDaulNetV2Auto, ResDaulNetV2RevAuto, ResDaulNetV2Rev2Auto, ResDaulNetV2
 from warmup_scheduler import GradualWarmupScheduler, CosineAnnealingWarmUpRestarts
 
 
@@ -43,9 +43,10 @@ config = {
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
-    "l2_reg": 0.0025,
+    "l2_reg": 0.0,
     "dropout_rate": [0.3, 0.3, 0.3, 0.3],
     "scheduling": "warm",  # ["normal", "warm", "warm_and_restart"]
+    "augment" : False,
 }
 
 if config["set_random_seed"]:
@@ -102,7 +103,23 @@ elif Dataset == "CIFAR-10":
     normalize = transforms.Normalize(
         mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
     )
-    transform_train = transforms.Compose([transforms.ToTensor(), normalize])
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.ToTensor(),
+        normalize
+    ])
+
+    if config["augment"]:
+        ## override normalize weights
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+
+        transform_train = transforms.Compose([
+            transforms.AutoAugment(transforms.AutoAugmentPolicy.CIFAR10),
+            transforms.ToTensor(),
+            normalize
+        ])
+
     transform_test = transforms.Compose([transforms.ToTensor(), normalize])
     trainset = torchvision.datasets.CIFAR10(
         root="./cifar-10/", train=True, download=True, transform=transform_train
@@ -210,12 +227,10 @@ def test(epoch, dir_path=None) -> None:
 print("==> Building model..")
 
 nets = {
-    # "resdualnet_v2": ResDaulNetV2Auto(
-    #     [2, 2, 2, 2], dropout_rate=config["dropout_rate"]
+    "resdualnet_v2": ResDaulNetV2(),
+    # "resdualnet_v2": ResDaulNetV2RevAuto(
+    #     [2, 2, 2, 2], dropout_rate=[0.9, 0.9, 0.9, 0.9]
     # ),
-    "resdualnet_v2": ResDaulNetV2RevAuto(
-        [2, 2, 2, 2], dropout_rate=[0.9, 0.9, 0.9, 0.9]
-    ),
 }
 
 for netkey in nets.keys():
