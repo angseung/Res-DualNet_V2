@@ -491,7 +491,7 @@ class ResDualNet(nn.Module):
         return out
 
 
-def ResDaulNetV2():
+def ResDualNetV2():
     return ResDualNet(DWHTBlock, [2, 2, 2, 2])
 
 
