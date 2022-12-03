@@ -15,7 +15,7 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from models.resdualnetv2 import ResDaulNetV2Auto, ResDaulNetV2RevAuto, ResDaulNetV2Rev2Auto, ResDaulNetV2
+from models.resdualnetv2 import ResDaulNetV2Auto, ResDaulNetV2RevAuto, ResDaulNetV2Rev2Auto, ResDualNetV2
 from warmup_scheduler import GradualWarmupScheduler, CosineAnnealingWarmUpRestarts
 
 
@@ -233,7 +233,7 @@ def test(epoch, dir_path=None) -> Tuple[float, float]:
 print("==> Building model..")
 
 nets = {
-    "resdualnet_v2": ResDaulNetV2(),
+    "resdualnet_v2": ResDualNetV2(),
     # "resdualnet_v2": ResDaulNetV2RevAuto(
     #     [2, 2, 2, 2], dropout_rate=[0.9, 0.9, 0.9, 0.9]
     # ),
