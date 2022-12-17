@@ -103,11 +103,12 @@ if Dataset == "ImageNet":
 elif Dataset == "CIFAR-10":
     input_size = 32
     normalize = transforms.Normalize(
-        mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
+        mean=[0.4914, 0.4822, 0.4465],
+        std=[0.2023, 0.1994, 0.2010],
     )
     transform_train = transforms.Compose(
         [
-            transforms.RandomCrop(32, padding=4),
+            transforms.RandomCrop(32, padding=8),
             transforms.ToTensor(),
             normalize
         ]
@@ -116,7 +117,8 @@ elif Dataset == "CIFAR-10":
     if config["augment"]:
         ## override normalize weights
         normalize = transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+            mean=[0.4914, 0.4822, 0.4465],
+            std=[0.2023, 0.1994, 0.2010],
         )
 
         transform_train = transforms.Compose(
