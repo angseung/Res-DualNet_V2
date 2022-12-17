@@ -74,8 +74,10 @@ class DCT(nn.Module):
 
         # generate DCT weight list
         self.dct_weights = torch.tensor(
-            [math.cos((math.pi / self.in_planes) * (0.5 + n) * n)
-            for n in range(self.in_planes)]
+            [
+                math.cos((math.pi / self.in_planes) * (0.5 + n) * n)
+                for n in range(self.in_planes)
+            ]
         )
 
     def forward(self, data: torch.Tensor) -> torch.Tensor:
@@ -151,7 +153,9 @@ class DWHTBlock(nn.Module):
 
         if dropout_rate is not None:
             if dropout_rate > 0.5:
-                warnings.warn(f"Dropout rate is too high, got {dropout_rate}", UserWarning)
+                warnings.warn(
+                    f"Dropout rate is too high, got {dropout_rate}", UserWarning
+                )
 
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
@@ -253,7 +257,9 @@ class DWHTBlockRev(nn.Module):
 
         if dropout_rate is not None:
             if dropout_rate > 0.5:
-                warnings.warn(f"Dropout rate is too high, got {dropout_rate}", UserWarning)
+                warnings.warn(
+                    f"Dropout rate is too high, got {dropout_rate}", UserWarning
+                )
 
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
@@ -499,8 +505,13 @@ def ResDaulNetV2Auto(block_config: List[int], dropout_rate: List[Union[float, No
     return ResDualNet(DWHTBlock, block_config, dropout_rate=dropout_rate)
 
 
-def ResDaulNetV2RevAuto(block_config: List[int], dropout_rate: List[Union[float, None]]):
+def ResDaulNetV2RevAuto(
+    block_config: List[int], dropout_rate: List[Union[float, None]]
+):
     return ResDualNet(DWHTBlockRev, block_config, dropout_rate=dropout_rate)
 
-def ResDaulNetV2Rev2Auto(block_config: List[int], dropout_rate: List[Union[float, None]]):
+
+def ResDaulNetV2Rev2Auto(
+    block_config: List[int], dropout_rate: List[Union[float, None]]
+):
     return ResDualNet(DWHTBlockRev2, block_config, dropout_rate=dropout_rate)

@@ -101,7 +101,7 @@ class BasicBlock(nn.Module):
                     kernel_size=1,
                     stride=stride,
                     bias=False,
-                    ),
+                ),
                 nn.BatchNorm2d(self.expansion * planes),
             )
 
@@ -115,7 +115,6 @@ class BasicBlock(nn.Module):
 
 
 class DPBlock(BasicBlock):
-
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
         out = self.bn1_pw(self.conv1_p1(out))
@@ -127,7 +126,6 @@ class DPBlock(BasicBlock):
 
 
 class DCTBlock(BasicBlock):
-
     def forward(self, x):
         out = self.bn1_dw1(swish(self.conv1_d1(x) + self.conv1_d2(x)) * 0.5)
         out = self.dct(out, self.planes, 1)

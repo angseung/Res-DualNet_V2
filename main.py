@@ -15,7 +15,12 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from models.resdualnetv2 import ResDaulNetV2Auto, ResDaulNetV2RevAuto, ResDaulNetV2Rev2Auto, ResDualNetV2
+from models.resdualnetv2 import (
+    ResDaulNetV2Auto,
+    ResDaulNetV2RevAuto,
+    ResDaulNetV2Rev2Auto,
+    ResDualNetV2,
+)
 from warmup_scheduler import GradualWarmupScheduler, CosineAnnealingWarmUpRestarts
 
 
@@ -48,7 +53,7 @@ config = {
     "l2_reg": 0.0005,
     "dropout_rate": [0.3, 0.3, 0.3, 0.3],
     "scheduling": "warm",  # ["normal", "warm", "warm_and_restart"]
-    "augment" : False,
+    "augment": False,
 }
 
 if config["set_random_seed"]:
@@ -105,22 +110,23 @@ elif Dataset == "CIFAR-10":
     normalize = transforms.Normalize(
         mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]
     )
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.ToTensor(),
-        normalize
-    ])
+    transform_train = transforms.Compose(
+        [transforms.RandomCrop(32, padding=4), transforms.ToTensor(), normalize]
+    )
 
     if config["augment"]:
         ## override normalize weights
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
+        normalize = transforms.Normalize(
+            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+        )
 
-        transform_train = transforms.Compose([
-            transforms.AutoAugment(transforms.AutoAugmentPolicy.CIFAR10),
-            transforms.ToTensor(),
-            normalize
-        ])
+        transform_train = transforms.Compose(
+            [
+                transforms.AutoAugment(transforms.AutoAugmentPolicy.CIFAR10),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
 
     transform_test = transforms.Compose([transforms.ToTensor(), normalize])
     trainset = torchvision.datasets.CIFAR10(
@@ -323,11 +329,11 @@ for netkey in nets.keys():
         test_loss, test_acc = test(epoch, log_path)
 
         ## write to tensorboard
-        writer.add_scalar('Loss/train', train_loss, epoch)
-        writer.add_scalar('Loss/test', test_loss, epoch)
-        writer.add_scalar('Accuracy/train', train_acc, epoch)
-        writer.add_scalar('Accuracy/test', test_acc, epoch)
-        writer.add_scalar('Learning rate', scheduler.get_lr()[0], epoch)
+        writer.add_scalar("Loss/train", train_loss, epoch)
+        writer.add_scalar("Loss/test", test_loss, epoch)
+        writer.add_scalar("Accuracy/train", train_acc, epoch)
+        writer.add_scalar("Accuracy/test", test_acc, epoch)
+        writer.add_scalar("Learning rate", scheduler.get_lr()[0], epoch)
 
         scheduler.step()
 

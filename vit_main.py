@@ -247,10 +247,8 @@ def test(epoch, dir_path=None) -> None:
 print("==> Building model..")
 
 nets = {
-    "vit_model" : timm.create_model(
-        'vit_base_patch16_224',
-        pretrained=True,
-        num_classes=10
+    "vit_model": timm.create_model(
+        "vit_base_patch16_224", pretrained=True, num_classes=10
     )
 }
 

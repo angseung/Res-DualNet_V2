@@ -20,23 +20,25 @@ time_resnet: float = 0
 for _ in range(iters):
     start = time.time()
     dummy_output = resdualnetv2(input_tensor)
-    time_resdualnetv2 += (time.time() - start)
+    time_resdualnetv2 += time.time() - start
 
 for _ in range(iters):
     start = time.time()
     dummy_output = resdualnetv1(input_tensor)
-    time_resdualnetv1 += (time.time() - start)
+    time_resdualnetv1 += time.time() - start
 
 for _ in range(iters):
     start = time.time()
     dummy_output = resnet(input_tensor)
-    time_resnet += (time.time() - start)
+    time_resnet += time.time() - start
 
 avg_time_resdualnetv2 = time_resdualnetv2 / iters
 avg_time_resdualnetv1 = time_resdualnetv1 / iters
 avg_time_resnet = time_resnet / iters
 
-print(f"RDV2 : {avg_time_resdualnetv2} RDV1: {avg_time_resdualnetv1} ResNet: {avg_time_resnet}")
+print(
+    f"RDV2 : {avg_time_resdualnetv2} RDV1: {avg_time_resdualnetv1} ResNet: {avg_time_resnet}"
+)
 
 # print(summary(resdualnetv2, input_size=input_size))
 # print(summary(resdualnetv1, input_size=input_size))
