@@ -12,7 +12,7 @@ from tqdm import tqdm
 import numpy as np
 from tensorboardX import SummaryWriter
 from utils import progress_bar, VisdomLinePlotter, VisdomImagePlotter, save_checkpoint
-from models.resdualnet import ResDaulNetMnist
+from models.resdualnetv1 import ResDaulNetMnist
 
 ## for tensorboard run this command
 """
