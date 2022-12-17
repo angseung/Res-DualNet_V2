@@ -139,3 +139,4 @@ autograd_test.py
 *.pptx
 cifar-10
 imagenet
+.DS_Store
