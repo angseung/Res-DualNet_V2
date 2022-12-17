@@ -44,7 +44,7 @@ config = {
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
-    "l2_reg": 0.0005,
+    "l2_reg": 0.00075,
     "dropout_rate": [0.3, 0.3, 0.3, 0.3],
     "scheduling": "warm",  # ["normal", "warm", "warm_and_restart"]
     "augment": False,
@@ -99,6 +99,7 @@ if Dataset == "ImageNet":
         root="./imagenet/", split="val", transform=transform_test
     )
 
+# TODO: modify padding in RandomCrop
 elif Dataset == "CIFAR-10":
     input_size = 32
     normalize = transforms.Normalize(
@@ -106,7 +107,7 @@ elif Dataset == "CIFAR-10":
     )
     transform_train = transforms.Compose(
         [
-            # transforms.RandomCrop(32, padding=4),
+            transforms.RandomCrop(32, padding=4),
             transforms.ToTensor(),
             normalize
         ]
