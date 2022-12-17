@@ -1,10 +1,9 @@
 import os
 import platform
-import argparse
 import random
 import datetime
 import json
-from typing import Tuple, Union, List
+from typing import Tuple
 import torch
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
@@ -15,13 +14,8 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from models.resdualnetv2 import (
-    ResDaulNetV2Auto,
-    ResDaulNetV2RevAuto,
-    ResDaulNetV2Rev2Auto,
-    ResDualNetV2,
-)
-from warmup_scheduler import GradualWarmupScheduler, CosineAnnealingWarmUpRestarts
+from models.resdualnetv2 import ResDualNetV2
+from warmup_scheduler import CosineAnnealingWarmUpRestarts
 
 
 def seed_worker(worker_id: None) -> None:
@@ -239,10 +233,7 @@ def test(epoch, dir_path=None) -> Tuple[float, float]:
 print("==> Building model..")
 
 nets = {
-    "resdualnet_v2": ResDualNetV2(),
-    # "resdualnet_v2": ResDaulNetV2RevAuto(
-    #     [2, 2, 2, 2], dropout_rate=[0.9, 0.9, 0.9, 0.9]
-    # ),
+    "resdualnet_v2": ResDualNetV2()
 }
 
 for netkey in nets.keys():
