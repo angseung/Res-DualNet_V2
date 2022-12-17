@@ -1,20 +1,21 @@
 import warnings
-from typing import Any, List, Optional, Union
+from typing import List, Union
 import math
 import torch
 import torch.nn as nn
+from torch import Tensor
 import torch.nn.functional as F
 from dropblock import DropBlock2D
 
 
-def swish(x: torch.Tensor = None) -> torch.Tensor:
+def swish(x: Tensor = None) -> Tensor:
     if x.__class__.__name__ != "Tensor":
         raise TypeError("Input must be torch Tensor")
 
     return x * x.sigmoid()
 
 
-def channel_shuffle(x: torch.Tensor, groups: int) -> torch.Tensor:
+def channel_shuffle(x: Tensor, groups: int) -> Tensor:
     batchsize, num_channels, height, width = x.size()
     channels_per_group = num_channels // groups
 
@@ -36,7 +37,7 @@ class DWHT(nn.Module):
         planes: int = 128,
         groups: int = 8,
         shuffle: bool = True,
-    ) -> nn.Module:
+    ):
         super(DWHT, self).__init__()
         self.n = int(math.log2(in_planes))
         self.N = in_planes
@@ -44,7 +45,7 @@ class DWHT(nn.Module):
         self.groups = groups
         self.shuffle = shuffle
 
-    def forward(self, x: torch.Tensor = None) -> torch.Tensor:
+    def forward(self, x: Tensor = None) -> Tensor:
         if x.shape[1] != self.N:
             raise ValueError("input channel error")
 
@@ -52,11 +53,11 @@ class DWHT(nn.Module):
         if self.N < self.M:
             x = F.pad(x, (0, 0, 0, 0, 0, (self.M - self.N)), "constant", 0)
 
-        for i in range(self.n):
-            e = x[:, ::2, :, :]
-            o = x[:, 1::2, :, :]
-            x[:, : (self.M // 2), :, :] = e + o
-            x[:, (self.M // 2) :, :, :] = e - o
+        # for i in range(self.n):
+        e = x[:, ::2, :, :]
+        o = x[:, 1::2, :, :]
+        x[:, : (self.M // 2), :, :] = e + o
+        x[:, (self.M // 2) :, :, :] = e - o
 
         if self.N > self.M:
             x = x[:, : self.M, :, :]
@@ -80,7 +81,7 @@ class DCT(nn.Module):
             ]
         )
 
-    def forward(self, data: torch.Tensor) -> torch.Tensor:
+    def forward(self, data: Tensor) -> Tensor:
         raise NotImplementedError
 
 
