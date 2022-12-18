@@ -53,10 +53,11 @@ class DWHT(nn.Module):
         if self.N < self.M:
             x = F.pad(x, (0, 0, 0, 0, 0, (self.M - self.N)), "constant", 0)
 
-        e = x[:, ::2, :, :]
-        o = x[:, 1::2, :, :]
-        x[:, : (self.M // 2), :, :] = e + o
-        x[:, (self.M // 2) :, :, :] = e - o
+        for _ in range(self.n):
+            e = x[:, ::2, :, :]
+            o = x[:, 1::2, :, :]
+            x[:, : (self.M // 2), :, :] = e + o
+            x[:, (self.M // 2) :, :, :] = e - o
 
         if self.N > self.M:
             x = x[:, : self.M, :, :]
