@@ -40,6 +40,6 @@ print(
     f"RDV2 : {avg_time_resdualnetv2} RDV1: {avg_time_resdualnetv1} ResNet: {avg_time_resnet}"
 )
 
-# print(summary(resdualnetv2, input_size=input_size))
-# print(summary(resdualnetv1, input_size=input_size))
-# print(summary(resnet, input_size=input_size))
+print(summary(resdualnetv2, input_size=input_size))
+print(summary(resdualnetv1, input_size=input_size))
+print(summary(resnet, input_size=input_size))

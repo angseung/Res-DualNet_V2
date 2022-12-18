@@ -4,6 +4,7 @@ Reference:
 [1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
     Deep Residual Learning for Image Recognition. arXiv:1512.03385
 """
+from typing import List
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -170,8 +171,8 @@ class ResNet(nn.Module):
         return out
 
 
-def ResDualNetV1():
-    return ResNet(DPBlock, [2, 2, 2, 2])
+def ResDualNetV1(block_cfg: List[int] = [2, 2, 2, 2]):
+    return ResNet(DPBlock, block_cfg)
 
 
 def test():
