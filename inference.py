@@ -9,6 +9,10 @@ resdualnetv2 = ResDualNetV2().to("cpu").eval()
 resdualnetv1 = ResDualNetV1().to("cpu").eval()
 resnet = ResNet18().to("cpu").eval()
 
+resnet = torch.jit.script(resnet)
+resdualnetv1 = torch.jit.script(resdualnetv1)
+# resdualnetv2 = torch.jit.script(resdualnetv2)
+
 input_size = (1, 3, 32, 32)
 input_tensor = torch.randn(input_size).to("cpu")
 
@@ -40,6 +44,6 @@ print(
     f"RDV2 : {avg_time_resdualnetv2} RDV1: {avg_time_resdualnetv1} ResNet: {avg_time_resnet}"
 )
 
-print(summary(resdualnetv2, input_size=input_size))
-print(summary(resdualnetv1, input_size=input_size))
-print(summary(resnet, input_size=input_size))
+# print(summary(resdualnetv2, input_size=input_size))
+# print(summary(resdualnetv1, input_size=input_size))
+# print(summary(resnet, input_size=input_size))
