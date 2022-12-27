@@ -5,6 +5,8 @@ from models.resdualnetv2 import ResDualNetV2
 from models.resdualnetv1 import ResDualNetV1
 from models.resnet import ResNet18
 
+torch.set_num_threads(1)
+
 resdualnetv2 = ResDualNetV2().to("cpu").eval()
 resdualnetv1 = ResDualNetV1().to("cpu").eval()
 resnet = ResNet18().to("cpu").eval()
