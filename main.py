@@ -41,7 +41,8 @@ config = {
     "max_epoch": 200,
     "initial_lr": 0.001,
     "train_batch_size": 64,
-    "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
+    # "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
+    "dataset": "ImageNet",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
     "l2_reg": 0.00075,
