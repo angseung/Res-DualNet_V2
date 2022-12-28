@@ -94,10 +94,10 @@ if Dataset == "ImageNet":
         ]
     )
     trainset = torchvision.datasets.ImageNet(
-        root="./imagenet/", split="train", transform=transform_train
+        root="/yper_data/imagenet/", split="train", transform=transform_train
     )
     testset = torchvision.datasets.ImageNet(
-        root="./imagenet/", split="val", transform=transform_test
+        root="/yper_data/imagenet/", split="val", transform=transform_test
     )
 
 # TODO: modify padding in RandomCrop
