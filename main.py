@@ -108,11 +108,7 @@ elif Dataset == "CIFAR-10":
         std=[0.2023, 0.1994, 0.2010],
     )
     transform_train = transforms.Compose(
-        [
-            transforms.RandomCrop(32, padding=8),
-            transforms.ToTensor(),
-            normalize
-        ]
+        [transforms.RandomCrop(32, padding=8), transforms.ToTensor(), normalize]
     )
 
     if config["augment"]:
@@ -240,9 +236,7 @@ def test(epoch, dir_path=None) -> Tuple[float, float]:
 # Model
 print("==> Building model..")
 
-nets = {
-    "resdualnet_v2": ResDualNetV2()
-}
+nets = {"resdualnet_v2": ResDualNetV2()}
 
 for netkey in nets.keys():
     now = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
