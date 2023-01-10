@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch import Tensor
 import torch.nn.functional as F
 from dropblock import DropBlock2D
-from .resdualnetv1 import ResNetImageNet
+from .resdualnetv1 import ResNetImageNet, ResNet
 
 
 def swish(x: Tensor = None) -> Tensor:
@@ -500,7 +500,7 @@ class ResDualNet(nn.Module):
 
 
 def ResDualNetV2():
-    return ResDualNet(DWHTBlock, [2, 2, 2, 2])
+    return ResNet(DWHTBlock, [2, 2, 2, 2])
 
 
 def ResDualNetV2ImageNet():
