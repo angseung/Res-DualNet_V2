@@ -37,7 +37,7 @@ class DWHT(nn.Module):
         in_planes: int = 64,
         planes: int = 128,
         groups: int = 8,
-        shuffle: bool = True,
+        shuffle: bool = False,
     ):
         super(DWHT, self).__init__()
         self.n = int(math.log2(in_planes))
@@ -146,7 +146,11 @@ class DWHTBlock(nn.Module):
     expansion = 1
 
     def __init__(
-        self, in_planes: int, planes: int, stride: int = 1, dropout_rate: float = 0.2
+        self,
+        in_planes: int,
+        planes: int,
+        stride: int = 1,
+        dropout_rate: Union[float, None] = None,
     ) -> nn.Module:
         super(DWHTBlock, self).__init__()
         self.in_planes = in_planes
