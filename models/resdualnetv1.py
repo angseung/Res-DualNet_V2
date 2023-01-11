@@ -167,7 +167,7 @@ class ResNetImageNet(nn.Module):
         self.in_planes = 64
 
         self.conv1 = nn.Conv2d(
-            3, self.in_planes, kernel_size=7, stride=1, padding=1, bias=False
+            3, self.in_planes, kernel_size=7, stride=2, padding=3, bias=False
         )
         self.bn1 = nn.BatchNorm2d(self.in_planes)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
