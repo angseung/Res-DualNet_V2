@@ -27,3 +27,5 @@ net2_1.layer4.load_state_dict(net2.layer4.state_dict())
 b1_1 = net1_1(a1)
 b2_1 = net2_1(a1)
 b3 = ShuffleNet_32()(a1)
+
+mbv2 = torch.hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True)
