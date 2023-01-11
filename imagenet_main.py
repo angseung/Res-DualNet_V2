@@ -1,6 +1,7 @@
 import torch
 from models.resdualnetv1 import ResDualNetV1ImageNet, ResDualNetV1
 from models.resdualnetv2 import ResDualNetV2ImageNet, ResDualNetV2
+from models.shufflenetv1 import ShuffleNet_32
 
 a = torch.randn((1, 3, 224, 224))
 a1 = torch.randn((1, 3, 32, 32))
@@ -25,3 +26,4 @@ net2_1.layer4.load_state_dict(net2.layer4.state_dict())
 
 b1_1 = net1_1(a1)
 b2_1 = net2_1(a1)
+b3 = ShuffleNet_32()(a1)
