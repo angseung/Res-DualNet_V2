@@ -14,7 +14,7 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from models.resdualnetv2 import ResDualNetV2
+from models.resdualnetv2 import ResDualNetV2ImageNet
 from warmup_scheduler import CosineAnnealingWarmUpRestarts
 
 
@@ -46,8 +46,8 @@ config = {
     "train_resume": False,
     "set_random_seed": True,
     "l2_reg": 0.00075,
-    "dropout_rate": [0.3, 0.3, 0.3, 0.3],
-    "scheduling": "warm",  # ["normal", "warm", "warm_and_restart"]
+    "dropout_rate": [None, None, None, None],
+    "scheduling": "normal",  # ["normal", "warm", "warm_and_restart"]
     "augment": False,
 }
 
@@ -94,10 +94,10 @@ if Dataset == "ImageNet":
         ]
     )
     trainset = torchvision.datasets.ImageNet(
-        root="/yper_data/imagenet/", split="train", transform=transform_train
+        root="/data_yper/imagenet/", split="train", transform=transform_train
     )
     testset = torchvision.datasets.ImageNet(
-        root="/yper_data/imagenet/", split="val", transform=transform_test
+        root="/data_yper/imagenet/", split="val", transform=transform_test
     )
 
 # TODO: modify padding in RandomCrop
@@ -236,7 +236,7 @@ def test(epoch, dir_path=None) -> Tuple[float, float]:
 # Model
 print("==> Building model..")
 
-nets = {"resdualnet_v2": ResDualNetV2()}
+nets = {"resdualnet_v2": ResDualNetV2ImageNet()}
 
 for netkey in nets.keys():
     now = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
