@@ -18,6 +18,12 @@ from models.resdualnetv2 import ResDualNetV2ImageNet, ResDualNetV2
 from warmup_scheduler import CosineAnnealingWarmUpRestarts
 
 
+def freezer(layer: nn.Module) -> None:
+    for child in layer.children():
+        for param in child.parameters():
+            param.requires_grad = False
+
+
 def seed_worker(worker_id: None) -> None:
     worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
@@ -255,6 +261,11 @@ for netkey in nets.keys():
     net.layer2.load_state_dict(teacher_net.layer2.state_dict())
     net.layer3.load_state_dict(teacher_net.layer3.state_dict())
     net.layer4.load_state_dict(teacher_net.layer4.state_dict())
+
+    freezer(net.layer1)
+    freezer(net.layer2)
+    freezer(net.layer3)
+    freezer(net.layer4)
 
     writer = SummaryWriter(log_path)
 
