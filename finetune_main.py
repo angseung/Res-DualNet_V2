@@ -262,10 +262,10 @@ for netkey in nets.keys():
     net.layer3.load_state_dict(teacher_net.layer3.state_dict())
     net.layer4.load_state_dict(teacher_net.layer4.state_dict())
 
-    freezer(net.layer1)
-    freezer(net.layer2)
-    freezer(net.layer3)
-    freezer(net.layer4)
+    # freezer(net.layer1)
+    # freezer(net.layer2)
+    # freezer(net.layer3)
+    # freezer(net.layer4)
 
     writer = SummaryWriter(log_path)
 
