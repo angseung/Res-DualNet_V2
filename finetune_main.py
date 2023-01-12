@@ -14,7 +14,7 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from models.resdualnetv2 import ResDualNetV2ImageNet
+from models.resdualnetv2 import ResDualNetV2ImageNet, ResDualNetV2
 from warmup_scheduler import CosineAnnealingWarmUpRestarts
 
 
@@ -43,7 +43,7 @@ config = {
     "train_batch_size": 64,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     # "dataset": "ImageNet",  # [ImageNet, CIFAR-10]
-    "train_resume": True,
+    "train_resume": False,
     "set_random_seed": True,
     "l2_reg": 0.0,
     "dropout_rate": [None, None, None, None],
@@ -236,7 +236,11 @@ def test(epoch, dir_path=None) -> Tuple[float, float]:
 # Model
 print("==> Building model..")
 
-nets = {"resdualnet_v2": ResDualNetV2ImageNet()}
+teacher_net = ResDualNetV2ImageNet()
+ckpt = torch.load("outputs/resdualnet_v2_230111_160406/ckpt.pth", map_location=torch.device("cpu"))
+teacher_net.load_state_dict(ckpt["net"])
+
+nets = {"resdualnet_v2": ResDualNetV2()}
 
 for netkey in nets.keys():
     now = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
@@ -247,6 +251,11 @@ for netkey in nets.keys():
         log_path = f"outputs/{netkey}_{now}"
 
     net = nets[netkey]
+    net.layer1.load_state_dict(teacher_net.layer1.state_dict())
+    net.layer2.load_state_dict(teacher_net.layer2.state_dict())
+    net.layer3.load_state_dict(teacher_net.layer3.state_dict())
+    net.layer4.load_state_dict(teacher_net.layer4.state_dict())
+
     writer = SummaryWriter(log_path)
 
     os.makedirs(log_path, exist_ok=True)
@@ -254,7 +263,7 @@ for netkey in nets.keys():
     if not config["train_resume"]:
         with open(log_path + "/log.txt", "w") as f:
             f.write(f"Networks : {netkey}_{now}\n")
-            config["dropout_rate"] = net.dropout_rate
+            # config["dropout_rate"] = net.dropout_rate
             f.write("Net Train Configs: \n %s\n" % json.dumps(config))
             m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
             f.write("%s\n" % str(m_info))
