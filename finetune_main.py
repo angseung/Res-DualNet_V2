@@ -14,7 +14,7 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from models.resdualnetv2 import ResDualNetV2ImageNet, ResDualNetV2
+from models.resdualnetv2 import ResDualNetV2ImageNet, ResDualNetV2, ResDaulNetV2Auto
 from warmup_scheduler import CosineAnnealingWarmUpRestarts
 
 
@@ -45,7 +45,7 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 config = {
     "max_epoch": 200,
-    "initial_lr": 0.001,
+    "initial_lr": 0.0001,
     "train_batch_size": 64,
     "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     # "dataset": "ImageNet",  # [ImageNet, CIFAR-10]
@@ -243,10 +243,13 @@ def test(epoch, dir_path=None) -> Tuple[float, float]:
 print("==> Building model..")
 
 teacher_net = ResDualNetV2ImageNet()
-ckpt = torch.load("outputs/resdualnet_v2_230111_160406/ckpt.pth", map_location=torch.device("cpu"))
+ckpt = torch.load("outputs/resdualnet_v2_230112_150654/ckpt.pth", map_location=torch.device("cpu"))
 teacher_net.load_state_dict(ckpt["net"])
 
-nets = {"resdualnet_v2": ResDualNetV2()}
+nets = {
+    # "resdualnet_v2": ResDualNetV2(),
+    "resdualnetv2_dr": ResDaulNetV2Auto(block_config=[2, 2, 2, 2], dropout_rate=config["dropout_rate"]),
+}
 
 for netkey in nets.keys():
     now = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
@@ -274,7 +277,8 @@ for netkey in nets.keys():
     if not config["train_resume"]:
         with open(log_path + "/log.txt", "w") as f:
             f.write(f"Networks : {netkey}_{now}\n")
-            # config["dropout_rate"] = net.dropout_rate
+            if None not in config["dropout_rate"]:
+                config["dropout_rate"] = net.dropout_rate
             f.write("Net Train Configs: \n %s\n" % json.dumps(config))
             m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
             f.write("%s\n" % str(m_info))
