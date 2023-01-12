@@ -53,7 +53,7 @@ config = {
     "set_random_seed": True,
     "l2_reg": 0.0,
     "dropout_rate": [None, None, None, None],
-    "scheduling": "normal",  # ["normal", "warm", "warm_and_restart"]
+    "scheduling": "warm",  # ["normal", "warm", "warm_and_restart"]
     "augment": False,
 }
 

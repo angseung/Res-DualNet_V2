@@ -39,11 +39,11 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 config = {
     "max_epoch": 200,
-    "initial_lr": 0.001,
+    "initial_lr": 0.0025,
     "train_batch_size": 64,
-    "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
-    # "dataset": "ImageNet",  # [ImageNet, CIFAR-10]
-    "train_resume": True,
+    # "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
+    "dataset": "ImageNet",  # [ImageNet, CIFAR-10]
+    "train_resume": False,
     "set_random_seed": True,
     "l2_reg": 0.0,
     "dropout_rate": [None, None, None, None],
