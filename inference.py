@@ -31,10 +31,11 @@ for _ in range(iters):
     dummy_output = resdualnetv2(input_tensor)
     time_resdualnetv2 += time.time() - start
 
-for _ in range(iters):
-    start = time.time()
-    dummy_output = resdualnetv1(input_tensor)
-    time_resdualnetv1 += time.time() - start
+with torch.jit.optimized_execution(False):
+    for _ in range(iters):
+        start = time.time()
+        dummy_output = resdualnetv1(input_tensor)
+        time_resdualnetv1 += time.time() - start
 
 with torch.jit.optimized_execution(False):
     for _ in range(iters):
