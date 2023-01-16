@@ -39,13 +39,12 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 config = {
     "max_epoch": 200,
-    "initial_lr": 0.0025,
-    "train_batch_size": 64,
-    # "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
-    "dataset": "ImageNet",  # [ImageNet, CIFAR-10]
+    "initial_lr": 0.001,
+    "train_batch_size": 128,
+    "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
-    "l2_reg": 0.0,
+    "l2_reg": 0.001,
     "dropout_rate": [None, None, None, None],
     "scheduling": "normal",  # ["normal", "warm", "warm_and_restart"]
     "augment": False,
@@ -94,13 +93,12 @@ if Dataset == "ImageNet":
         ]
     )
     trainset = torchvision.datasets.ImageNet(
-        root="/data_yper/imagenet/", split="train", transform=transform_train
+        root="./imagenet/", split="train", transform=transform_train
     )
     testset = torchvision.datasets.ImageNet(
-        root="/data_yper/imagenet/", split="val", transform=transform_test
+        root="./imagenet/", split="val", transform=transform_test
     )
 
-# TODO: modify padding in RandomCrop
 elif Dataset == "CIFAR-10":
     input_size = 32
     normalize = transforms.Normalize(
@@ -254,7 +252,6 @@ for netkey in nets.keys():
     if not config["train_resume"]:
         with open(log_path + "/log.txt", "w") as f:
             f.write(f"Networks : {netkey}_{now}\n")
-            config["dropout_rate"] = net.dropout_rate
             f.write("Net Train Configs: \n %s\n" % json.dumps(config))
             m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
             f.write("%s\n" % str(m_info))
