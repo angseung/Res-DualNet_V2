@@ -54,6 +54,7 @@ torch>=1.13.0
 torchinfo>=1.7.1
 torchvision>=0.14.0
 tornado>=6.2
+thop
 tqdm>=4.64.1
 typing_extensions>=4.4.0
 urllib3>=1.26.12
