@@ -1,6 +1,7 @@
 import time
 import torch
 from torchinfo import summary
+from thop import profile
 from models.resdualnetv2 import ResDualNetV2
 from models.resdualnetv1 import ResDualNetV1
 from models.shufflenetv1 import ShuffleNet_32
@@ -61,3 +62,12 @@ print(
 # print(summary(resdualnetv2, input_size=input_size))
 # print(summary(resdualnetv1, input_size=input_size))
 # print(summary(resnet, input_size=input_size))
+
+macs, params = profile(resdualnetv1, inputs=(input_tensor,))
+print(f"resdualnetv1 : MACS {macs}, Params {params}")
+macs, params = profile(resdualnetv2, inputs=(input_tensor,))
+print(f"resdualnetv2 : MACS {macs}, Params {params}")
+macs, params = profile(resnet, inputs=(input_tensor,))
+print(f"resnet : MACS {macs}, Params {params}")
+macs, params = profile(shufflenet, inputs=(input_tensor,))
+print(f"shufflenet : MACS {macs}, Params {params}")
