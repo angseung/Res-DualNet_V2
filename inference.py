@@ -1,6 +1,5 @@
 import time
 import torch
-from torchinfo import summary
 from thop import profile
 from models.resdualnetv2 import ResDualNetV2
 from models.resdualnetv1 import ResDualNetV1
@@ -58,10 +57,6 @@ avg_time_shufflenet = time_shufflenet / iters
 print(
     f"RDV2 : {avg_time_resdualnetv2} RDV1: {avg_time_resdualnetv1} ResNet: {avg_time_resnet} SFNet: {avg_time_shufflenet}"
 )
-
-# print(summary(resdualnetv2, input_size=input_size))
-# print(summary(resdualnetv1, input_size=input_size))
-# print(summary(resnet, input_size=input_size))
 
 macs, params = profile(resdualnetv1, inputs=(input_tensor,))
 print(f"resdualnetv1 : MACS {macs}, Params {params}")
