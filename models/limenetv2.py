@@ -74,7 +74,6 @@ class DCT(nn.Module):
         super(DCT, self).__init__()
         self.in_planes = in_plains
 
-        # generate DCT weight list
         self.dct_weights = torch.tensor(
             [
                 math.cos((math.pi / self.in_planes) * (0.5 + n) * n)

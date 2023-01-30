@@ -1,9 +1,3 @@
-"""ResNet in PyTorch.
-For Pre-activation ResNet, see 'preact_resnet.py'.
-Reference:
-[1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
-    Deep Residual Learning for Image Recognition. arXiv:1512.03385
-"""
 from typing import List
 import torch
 import torch.nn as nn
@@ -23,13 +17,11 @@ class BasicBlock(nn.Module):
         self.in_planes = in_planes
         self.planes = planes
 
-        # vanila resnet18 layer
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
         )
         self.bn1 = nn.BatchNorm2d(planes)
 
-        # resdual18 layer - 1(DW stride 적용)
         self.conv1_d1 = nn.Conv2d(
             in_planes,
             in_planes,
@@ -56,13 +48,11 @@ class BasicBlock(nn.Module):
         self.bn1_dw2 = nn.BatchNorm2d(in_planes)
         self.bn1_pw = nn.BatchNorm2d(planes)
 
-        # vanila resnet18 layer
         self.conv2 = nn.Conv2d(
             planes, planes, kernel_size=3, stride=1, padding=1, bias=False
         )
         self.bn2 = nn.BatchNorm2d(planes)
 
-        # resdual18 layer - 2
         self.conv2_d1 = nn.Conv2d(
             planes,
             planes,
@@ -198,19 +188,15 @@ class ResNetImageNet(nn.Module):
         return out
 
 
-def ResDualNetV1(block_cfg: List[int] = [2, 2, 2, 2]):
+def LiMeNetV1(block_cfg: List[int] = [2, 2, 2, 2]):
     return ResNet(DPBlock, block_cfg)
 
 
-def ResDualNetV1ImageNet(block_cfg: List[int] = [2, 2, 2, 2]):
+def LiMENetV1ImageNet(block_cfg: List[int] = [2, 2, 2, 2]):
     return ResNetImageNet(DPBlock, block_cfg)
 
 
 def test():
-    net = ResDualNetV1()
-    # summary(net, (1, 3, 224, 224))
+    net = LiMeNetV1()
     y = net(torch.randn(1, 3, 32, 32))
     print(y.size())
-
-
-# test()
