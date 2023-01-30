@@ -1,4 +1,4 @@
-# LITNet: A Light-weight Image Transform Net for Image Style Transfer
+# LiMENet: Improving the Inference Time of Neural Networks on CPU Through Discrete Walsh-Hadamard Transform
 
 ## Descriptions
 This is a PyTorch implementation of ***LiMENet: Improving the Inference Time of Neural Networks on CPU Through Discrete Walsh-Hadamard Transform*** in review on the IJCNN 2023.
