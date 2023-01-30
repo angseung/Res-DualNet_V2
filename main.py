@@ -14,7 +14,7 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from models.resdualnetv2 import ResDualNetV2ImageNet
+from models.limenetv2 import LiMENetV2ImageNet
 from warmup_scheduler import CosineAnnealingWarmUpRestarts
 
 
@@ -234,7 +234,7 @@ def test(epoch, dir_path=None) -> Tuple[float, float]:
 # Model
 print("==> Building model..")
 
-nets = {"resdualnet_v2": ResDualNetV2ImageNet()}
+nets = {"limenet_v2": LiMENetV2ImageNet()}
 
 for netkey in nets.keys():
     now = datetime.datetime.now().strftime("%y%m%d_%H%M%S")

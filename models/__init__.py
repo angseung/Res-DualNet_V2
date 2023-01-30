@@ -1,4 +1,4 @@
-from .resdualnetv1 import *
-from .resdualnetv2 import *
+from .limenetv1 import *
+from .limenetv2 import *
 from .resnet import *
 

@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch import Tensor
 import torch.nn.functional as F
 from dropblock import DropBlock2D
-from .resdualnetv1 import ResNetImageNet, ResNet
+from .limenetv1 import ResNetImageNet, ResNet
 
 
 def swish(x: Tensor = None) -> Tensor:
@@ -455,7 +455,7 @@ class DWHTBlockRev2(nn.Module):
         return out
 
 
-class ResDualNet(nn.Module):
+class LiMENet(nn.Module):
     def __init__(
         self,
         block: nn.Module,
@@ -463,7 +463,7 @@ class ResDualNet(nn.Module):
         num_classes: int = 10,
         dropout_rate: List[Union[float, None]] = [None, None, None, None],
     ) -> nn.Module:
-        super(ResDualNet, self).__init__()
+        super(LiMENet, self).__init__()
         self.in_planes = 64
         self.dropout_rate = dropout_rate
 
@@ -503,25 +503,25 @@ class ResDualNet(nn.Module):
         return out
 
 
-def ResDualNetV2():
+def LiMENetV2():
     return ResNet(DWHTBlock, [2, 2, 2, 2])
 
 
-def ResDualNetV2ImageNet():
+def LiMENetV2ImageNet():
     return ResNetImageNet(DWHTBlock, [2, 2, 2, 2])
 
 
-def ResDaulNetV2Auto(block_config: List[int], dropout_rate: List[Union[float, None]]):
-    return ResDualNet(DWHTBlock, block_config, dropout_rate=dropout_rate)
+def LiMENetV2Auto(block_config: List[int], dropout_rate: List[Union[float, None]]):
+    return LiMENet(DWHTBlock, block_config, dropout_rate=dropout_rate)
 
 
-def ResDaulNetV2RevAuto(
+def LiMENetV2RevAuto(
     block_config: List[int], dropout_rate: List[Union[float, None]]
 ):
-    return ResDualNet(DWHTBlockRev, block_config, dropout_rate=dropout_rate)
+    return LiMENet(DWHTBlockRev, block_config, dropout_rate=dropout_rate)
 
 
-def ResDaulNetV2Rev2Auto(
+def LiMENetV2Rev2Auto(
     block_config: List[int], dropout_rate: List[Union[float, None]]
 ):
-    return ResDualNet(DWHTBlockRev2, block_config, dropout_rate=dropout_rate)
+    return LiMENet(DWHTBlockRev2, block_config, dropout_rate=dropout_rate)
