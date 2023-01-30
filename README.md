@@ -1,7 +1,7 @@
 # LiMENet: Improving the Inference Time of Neural Networks on CPU Through Discrete Walsh-Hadamard Transform
 
 ## Descriptions
-This is a PyTorch implementation of ***LiMENet: Improving the Inference Time of Neural Networks on CPU Through Discrete Walsh-Hadamard Transform*** in review on the IJCNN 2023.
+This is a PyTorch implementation of ***LiMENet: Improving the Inference Time of Neural Networks on CPU Through Discrete Walsh-Hadamard Transform*** under review on the IJCNN 2023.
 
 Artificial intelligence is increasingly being used as a core technology in various Internet of Things services.
 However, most edge devices do not have a built-in GPU, so they have difficulty accelerating neural network processing.
@@ -23,40 +23,38 @@ Our main contributions are:
 
 ## Prerequisites
 - Python 3.10
-- PyTorch 1.13.1
+- PyTorch 1.12.0
 
 <!-- ## Usage -->
 ## Installation
 * Clone this repo: https://anonymous.4open.science/r/limenet
 
-* install dependencies with 
+* install dependencies with pip
 
 ```bash
 pip install -r requirements.txt
 ```
 
 
-* Dataset will be downloaded automatically.
+* CIFAR-10 dataset will be downloaded automatically.
 
 Then you get the directory & file structure like this:
 
 ```
-|---warmup_scheduler
-|  └───__init__.py
-|  └───run.py
-|  └───scheduler.py
 |---models
-|  └───__init__.py
 |  └───limenetv1.py
 |  └───limenetv2.py
 |  └───resnet.py
-|---requirements.txt
+|---warmup_scheduler
+|  └───run.py
+|  └───scheduler.py
 |---main.py
+|---requirements.txt
 
 ```
 ## Quick Testing
 ### Train LiMENet models with CIFAR-10
-You can configure hyper parameters by modifying "config" dictionary in main.py, line 40, then run:
+You can configure hyper parameters by modifying values of "config" dictionary in main.py, line 40, then run:
 ```bash
 $ python main.py
 ```
