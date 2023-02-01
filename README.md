@@ -22,8 +22,8 @@ Our main contributions are:
 
 
 ## Prerequisites
-- Python 3.10
-- PyTorch 1.12.0
+- Python 3.9 or higher
+- PyTorch 1.12.0 or higher
 
 <!-- ## Usage -->
 ## Installation

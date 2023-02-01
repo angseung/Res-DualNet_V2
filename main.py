@@ -14,7 +14,7 @@ from torchinfo import summary
 from tqdm import tqdm
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
-from models.limenetv2 import LiMENetV2ImageNet
+from models.limenetv2 import LiMENetV2
 from warmup_scheduler import CosineAnnealingWarmUpRestarts
 
 
@@ -110,7 +110,7 @@ elif Dataset == "CIFAR-10":
     )
 
     if config["augment"]:
-        ## override normalize weights
+        # override normalize weights
         normalize = transforms.Normalize(
             mean=[0.4914, 0.4822, 0.4465],
             std=[0.2023, 0.1994, 0.2010],
@@ -234,7 +234,7 @@ def test(epoch, dir_path=None) -> Tuple[float, float]:
 # Model
 print("==> Building model..")
 
-nets = {"limenet_v2": LiMENetV2ImageNet()}
+nets = {"limenet_v2": LiMENetV2()}
 
 for netkey in nets.keys():
     now = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
