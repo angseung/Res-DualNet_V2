@@ -41,8 +41,8 @@ config = {
     "max_epoch": 200,
     "initial_lr": 0.0025,
     "train_batch_size": 64,
-    # "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
-    "dataset": "ImageNet",  # [ImageNet, CIFAR-10]
+    "dataset": "CIFAR-10",  # [ImageNet, CIFAR-10]
+    # "dataset": "ImageNet",  # [ImageNet, CIFAR-10]
     "train_resume": False,
     "set_random_seed": True,
     "l2_reg": 0.0,
@@ -254,7 +254,7 @@ for netkey in nets.keys():
     if not config["train_resume"]:
         with open(log_path + "/log.txt", "w") as f:
             f.write(f"Networks : {netkey}_{now}\n")
-            config["dropout_rate"] = net.dropout_rate
+            net.dropout_rate = config["dropout_rate"]
             f.write("Net Train Configs: \n %s\n" % json.dumps(config))
             m_info = summary(net, (1, 3, input_size, input_size), verbose=0)
             f.write("%s\n" % str(m_info))
